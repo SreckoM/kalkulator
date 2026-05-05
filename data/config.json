@@ -1,0 +1,158 @@
+{
+  "products": [
+    {
+      "id": "prozor",
+      "name": "Prozor",
+      "factor": 1
+    },
+    {
+      "id": "balkon",
+      "name": "Balkon",
+      "factor": 1
+    },
+    {
+      "id": "podizno",
+      "name": "Podizno / Klizni",
+      "factor": 1.2
+    }
+  ],
+  "types": [
+    {
+      "id": "jednokrilni",
+      "name": "Jednokrilni",
+      "factor": 1,
+      "products": [
+        "prozor",
+        "balkon",
+        "podizno"
+      ]
+    },
+    {
+      "id": "dvokrilni",
+      "name": "Dvokrilni",
+      "factor": 1.05,
+      "products": [
+        "prozor",
+        "balkon",
+        "podizno"
+      ]
+    },
+    {
+      "id": "dvokrilni_stub",
+      "name": "Dvokrilni sa stubom",
+      "factor": 1.05,
+      "products": [
+        "prozor"
+      ]
+    },
+    {
+      "id": "trokrilni",
+      "name": "Trokrilni",
+      "factor": 1.15,
+      "products": [
+        "prozor"
+      ]
+    }
+  ],
+  "materials": [
+    {
+      "id": "pvc",
+      "name": "PVC",
+      "pricePerCm2": 1.5,
+      "products": [
+        "prozor",
+        "balkon"
+      ]
+    },
+    {
+      "id": "alu",
+      "name": "ALU",
+      "pricePerCm2": 2.2,
+      "products": [
+        "prozor",
+        "balkon",
+        "podizno"
+      ]
+    }
+  ],
+  "profiles": [
+    {
+      "id": "basic",
+      "name": "Basic",
+      "factor": 1,
+      "material": "pvc",
+      "image": ""
+    },
+    {
+      "id": "standard",
+      "name": "Standard",
+      "factor": 1.1,
+      "material": "pvc",
+      "image": ""
+    },
+    {
+      "id": "optimal",
+      "name": "Optimal",
+      "factor": 1.2,
+      "material": "pvc",
+      "image": ""
+    },
+    {
+      "id": "premium",
+      "name": "Premium",
+      "factor": 1.4,
+      "material": "pvc",
+      "image": ""
+    },
+    {
+      "id": "alumil_termo",
+      "name": "Alumil Termo",
+      "factor": 1.4,
+      "material": "alu",
+      "image": ""
+    },
+    {
+      "id": "alumil_hladni",
+      "name": "Alumil Hladni",
+      "factor": 1.45,
+      "material": "alu",
+      "image": ""
+    },
+    {
+      "id": "asistal_termo",
+      "name": "Asistal Termo",
+      "factor": 1.35,
+      "material": "alu",
+      "image": ""
+    },
+    {
+      "id": "asistal_hladni",
+      "name": "Asistal Hladni",
+      "factor": 1.4,
+      "material": "alu",
+      "image": ""
+    }
+  ],
+  "additions": {
+    "komarnik": {
+      "name": "Komarnik",
+      "pricePerCm2": 1.1,
+      "enabled": true
+    },
+    "roletna": {
+      "name": "Roletna",
+      "pricePerCm2": 1.4,
+      "enabled": true
+    },
+    "okapnica": {
+      "name": "Okapnica",
+      "pricePerCm": 1.2,
+      "enabled": true
+    },
+    "podprozorska": {
+      "name": "Pod-prozorska daska",
+      "pricePerCm": 1.1,
+      "enabled": true
+    }
+  }
+}
