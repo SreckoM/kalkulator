@@ -66,7 +66,7 @@ export default function AdminPage() {
     if (!config) return
     setConfig({ ...config, profiles: config.profiles, products: config.products.map(p => p.id === id ? { ...p, [field]: typeof value === 'string' && field === 'factor' ? parseFloat(value) || 0 : value } : p) })
   }
-  function updateType(id: string, field: keyof Type, value: string | number) {
+  function updateType(id: string, field: keyof Type, value: string | number | string[]) {
     if (!config) return
     setConfig({ ...config, types: config.types.map(t => t.id === id ? { ...t, [field]: field === 'factor' ? parseFloat(value as string) || 0 : value } : t) })
   }
