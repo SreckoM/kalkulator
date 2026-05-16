@@ -305,6 +305,13 @@ export default function KalkulatorPage() {
                         <polyline points="16 10 19 12 16 14"/>
                       </svg>
                     )}
+                    {p.id === 'vrata' && (
+  			<svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className={productId === p.id ? 'text-blue-700' : 'text-gray-500'}>
+		    	<rect x="4" y="2" width="16" height="20" rx="1.5"/>
+		    	<circle cx="15" cy="12" r="1" fill="currentColor" stroke="none"/>
+		    	<line x1="4" y1="2" x2="4" y2="22"/>
+		  </svg>
+		)}
                   </div>
                   <div className={`text-sm font-bold leading-tight ${productId === p.id ? 'text-blue-800' : 'text-gray-700'}`}>{p.name}</div>
                 </OptionCard>
