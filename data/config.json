@@ -58,7 +58,7 @@
       "products": [
         "prozor"
       ]
-    }
+    },
     { 
     	"id": "sa_pomocnim", 
     	"name": "Sa pomocnim krilom", 
@@ -73,7 +73,8 @@
       "pricePerCm2": 1.5,
       "products": [
         "prozor",
-        "balkon"
+        "balkon",
+        "vrata"
       ]
     },
     {
@@ -83,7 +84,8 @@
       "products": [
         "prozor",
         "balkon",
-        "podizno"
+        "podizno",
+        "vrata"
       ]
     }
   ],

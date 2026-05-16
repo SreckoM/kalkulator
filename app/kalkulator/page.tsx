@@ -149,9 +149,9 @@ export default function KalkulatorPage() {
   }, [])
 
   // Derived available options
-  const availableTypes = config?.types.filter(t => t.products.includes(productId)) ?? []
-  const availableMaterials = config?.materials.filter(m => m.products.includes(productId)) ?? []
-  const availableProfiles = config?.profiles.filter(p => p.material === materialId) ?? []
+const availableTypes = config?.types?.filter(t => t.products?.includes(productId)) ?? []
+const availableMaterials = config?.materials?.filter(m => m.products?.includes(productId)) ?? []
+const availableProfiles = config?.profiles?.filter(p => p.material === materialId) ?? []
 
   // Reset downstream when upstream changes
   useEffect(() => { setTypeId(''); setMaterialId(''); setProfileId('') }, [productId])
@@ -170,10 +170,10 @@ export default function KalkulatorPage() {
     const h = parseFloat(height)
     if (isNaN(w) || isNaN(h) || w <= 0 || h <= 0) { setTotal(null); setBreakdown([]); return }
 
-    const product = config.products.find(p => p.id === productId)!
-    const type = config.types.find(t => t.id === typeId)!
-    const material = config.materials.find(m => m.id === materialId)!
-    const profile = config.profiles.find(p => p.id === profileId)!
+    const product = config.products?.find(p => p.id === productId)!
+    const type = config.types?.find(t => t.id === typeId)!
+    const material = config.materials?.find(m => m.id === materialId)!
+    const profile = config.profiles?.find(p => p.id === profileId)!
 
     // dimensions in cm
     const wCm = w / 10
@@ -250,8 +250,8 @@ export default function KalkulatorPage() {
 
   if (!config) return null
 
-  const selectedProduct = config.products.find(p => p.id === productId)
-  const selectedMaterial = config.materials.find(m => m.id === materialId)
+  const selectedProduct = config.products?.find(p => p.id === productId)
+  const selectedMaterial = config.materials?.find(m => m.id === materialId)
   const canShowAdditions = !!profileId && !!width && !!height
 
   return (
@@ -276,7 +276,7 @@ export default function KalkulatorPage() {
           {/* A. Product */}
           <Step n={1} title="Izaberite proizvod">
             <div className="grid grid-cols-3 gap-3">
-              {config.products.map((p: Product) => (
+              {config.products?.map((p: Product) => (
                 <OptionCard key={p.id} selected={productId === p.id} onClick={() => setProductId(p.id)}>
                   <div className="mb-3 flex justify-center">
                     {p.id === 'prozor' && (
@@ -323,7 +323,7 @@ export default function KalkulatorPage() {
           {productId && (
             <Step n={2} title="Tip otvaranja">
               <div className="grid grid-cols-2 gap-3">
-                {availableTypes.map((t: Type) => (
+                {availableTypes?.map((t: Type) => (
                   <OptionCard key={t.id} selected={typeId === t.id} onClick={() => setTypeId(t.id)}>
                     <div className={`text-sm font-bold ${typeId === t.id ? 'text-blue-800' : 'text-gray-700'}`}>{t.name}</div>
                     <div className="text-xs text-gray-400 mt-1">faktor ×{t.factor}</div>
@@ -337,7 +337,7 @@ export default function KalkulatorPage() {
           {typeId && (
             <Step n={3} title="Materijal">
               <div className="grid grid-cols-2 gap-3">
-                {availableMaterials.map((m: Material) => (
+                {availableMaterials?.map((m: Material) => (
                   <OptionCard key={m.id} selected={materialId === m.id} onClick={() => setMaterialId(m.id)}>
                     <div className={`text-lg font-black mb-1 ${materialId === m.id ? 'text-blue-800' : 'text-gray-700'}`}>{m.name}</div>
                     <div className="text-xs text-gray-400">{m.pricePerCm2} €/cm²</div>
@@ -351,7 +351,7 @@ export default function KalkulatorPage() {
           {materialId && (
             <Step n={4} title="Profil">
               <div className="grid grid-cols-2 gap-3">
-                {availableProfiles.map((p: Profile) => (
+                {availableProfiles?.map((p: Profile) => (
                   <OptionCard key={p.id} selected={profileId === p.id} onClick={() => setProfileId(p.id)}>
                     {p.image ? (
                       <img src={p.image} alt={p.name} className="w-full h-20 object-cover rounded-lg mb-3" />
