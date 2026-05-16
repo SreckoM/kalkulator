@@ -29,7 +29,8 @@
       "products": [
         "prozor",
         "balkon",
-        "podizno"
+        "podizno",
+        "vrata"
       ]
     },
     {
@@ -58,6 +59,12 @@
         "prozor"
       ]
     }
+    { 
+    	"id": "sa_pomocnim", 
+    	"name": "Sa pomocnim krilom", 
+    	"factor": 1.1, 
+    	"products": ["vrata"] 
+    	}
   ],
   "materials": [
     {
