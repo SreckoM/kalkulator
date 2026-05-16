@@ -275,7 +275,7 @@ const availableProfiles = config?.profiles?.filter(p => p.material === materialI
 
           {/* A. Product */}
           <Step n={1} title="Izaberite proizvod">
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-2 gap-3">
               {config.products?.map((p: Product) => (
                 <OptionCard key={p.id} selected={productId === p.id} onClick={() => setProductId(p.id)}>
                   <div className="mb-3 flex justify-center">
