@@ -151,26 +151,31 @@
     "komarnik": {
       "name": "Komarnik",
       "pricePerCm2": 1.1,
-      "enabled": true
+      "enabled": true,
+      "products": ["prozor", "balkon", "podizno"]
     },
     "roletna": {
       "name": "Roletna",
       "pricePerCm2": 1.4,
-      "enabled": true
+      "enabled": true,
+      "products": ["prozor", "balkon", "podizno"]
     },
     "okapnica": {
       "name": "Okapnica",
       "pricePerCm": 1.2,
-      "enabled": true
+      "enabled": true,
+      "products": ["prozor", "balkon", "podizno"]
     },
     "podprozorska": {
       "name": "Pod-prozorska daska",
       "pricePerCm": 1.1,
-      "enabled": true
+      "enabled": true,
+      "products": ["prozor", "balkon", "podizno"]
     },
-  "montaza": { 
-  	"name": "Montaža", 
-  	"fixedPrice": 50.0, 
-  	"enabled": true }
+    "montaza": {
+      "name": "Montaža",
+      "fixedPrice": 50.0,
+      "enabled": true
+    }
   }
 }

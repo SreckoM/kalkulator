@@ -400,7 +400,10 @@ const availableProfiles = config?.profiles?.filter(p => p.material === materialI
           )}
 
           {/* E. Additions */}
-          {canShowAdditions && (
+          {canShowAdditions && ['komarnik', 'roletna', 'okapnica', 'podprozorska'].some(k => {
+            const a = config.additions[k as keyof typeof config.additions]
+            return a.enabled && (!a.products || a.products.includes(productId))
+          }) && (
             <Step n={6} title="Dodaci (opciono)">
               <div className="grid grid-cols-2 gap-3">
                 {([
@@ -451,7 +454,10 @@ const availableProfiles = config?.profiles?.filter(p => p.material === materialI
                       </svg>
                     )
                   },
-                ] as const).map(a => (
+                ] as const).filter(a => {
+                  const cfg = config.additions[a.key]
+                  return cfg.enabled && (!cfg.products || cfg.products.includes(productId))
+                }).map(a => (
                   <button key={a.key} onClick={() => a.set(v => !v)}
                     className={`rounded-xl p-4 border-2 text-left transition-all duration-200 cursor-pointer ${a.val ? 'border-blue-700 bg-blue-50' : 'border-gray-200 bg-white hover:border-blue-300'}`}>
                     <div className={`mb-2 ${a.val ? 'text-blue-700' : 'text-gray-400'}`}>{a.icon}</div>

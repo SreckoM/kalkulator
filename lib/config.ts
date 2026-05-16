@@ -5,7 +5,7 @@ export interface Product { id: string; name: string; factor: number }
 export interface Type { id: string; name: string; factor: number; products: string[] }
 export interface Material { id: string; name: string; pricePerCm2: number; products: string[] }
 export interface Profile { id: string; name: string; factor: number; material: string; image: string }
-export interface Addition { name: string; pricePerCm2?: number; pricePerCm?: number; fixedPrice?: number; enabled: boolean }
+export interface Addition { name: string; pricePerCm2?: number; pricePerCm?: number; fixedPrice?: number; enabled: boolean; products?: string[] }
 export interface Config {
   products: Product[]
   types: Type[]
