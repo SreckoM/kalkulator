@@ -167,6 +167,10 @@
       "name": "Pod-prozorska daska",
       "pricePerCm": 1.1,
       "enabled": true
-    }
+    },
+  "montaza": { 
+  	"name": "Montaža", 
+  	"fixedPrice": 50.0, 
+  	"enabled": true }
   }
 }

@@ -129,6 +129,7 @@ export default function KalkulatorPage() {
   const [roletna, setRoletna] = useState(false)
   const [okapnica, setOkapnica] = useState(false)
   const [podprozorska, setPodprozorska] = useState(false)
+  const [montaza, setMontaza] = useState(false)
 
   const [total, setTotal] = useState<number | null>(null)
   const [breakdown, setBreakdown] = useState<{ label: string; value: string }[]>([])
@@ -208,12 +209,17 @@ const availableProfiles = config?.profiles?.filter(p => p.material === materialI
       addonsTotal += v
       bd.push({ label: 'Pod-prozorska daska', value: `${v.toFixed(2)} €` })
     }
+    if (montaza && config.additions.montaza?.enabled) {
+      const v = config.additions.montaza.fixedPrice ?? 0
+      addonsTotal += v
+      bd.push({ label: 'Montaža', value: `${v.toFixed(2)} €` })
+    }
 
     const grand = basePrice + addonsTotal
     setTotal(Math.round(grand * 100) / 100)
     setBreakdown(bd)
     setAnimKey(k => k + 1)
-  }, [config, productId, typeId, materialId, profileId, width, height, komarnik, roletna, okapnica, podprozorska])
+  }, [config, productId, typeId, materialId, profileId, width, height, komarnik, roletna, okapnica, podprozorska, montaza])
 
   useEffect(() => { calculate() }, [calculate])
 
@@ -231,7 +237,7 @@ const availableProfiles = config?.profiles?.filter(p => p.material === materialI
           name, email, city,
           product: product?.name, type: type?.name,
           material: material?.name, profile: profile?.name,
-          width, height, komarnik, roletna, okapnica, podprozorska, total,
+          width, height, komarnik, roletna, okapnica, podprozorska, montaza, total,
         }),
       })
       if (res.ok) { setShowModal(false); setShowSuccess(true) }
@@ -457,6 +463,27 @@ const availableProfiles = config?.profiles?.filter(p => p.material === materialI
                   </button>
                 ))}
               </div>
+            </Step>
+          )}
+
+          {/* G. Installation */}
+          {canShowAdditions && config.additions.montaza?.enabled && (
+            <Step n={7} title="Ugradnja">
+              <button onClick={() => setMontaza(v => !v)}
+                className={`w-full rounded-xl p-4 border-2 text-left transition-all duration-200 cursor-pointer flex items-center gap-4 ${montaza ? 'border-blue-700 bg-blue-50' : 'border-gray-200 bg-white hover:border-blue-300'}`}>
+                <div className={montaza ? 'text-blue-700' : 'text-gray-400'}>
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+                  </svg>
+                </div>
+                <div className="flex-1">
+                  <div className={`text-sm font-bold ${montaza ? 'text-blue-800' : 'text-gray-700'}`}>Montaža</div>
+                  <div className="text-xs text-gray-400 mt-0.5">fiksna cena: {(config.additions.montaza.fixedPrice ?? 0).toFixed(2)} €</div>
+                </div>
+                <div className={`w-4 h-4 rounded border-2 flex items-center justify-center transition-all ${montaza ? 'bg-blue-700 border-blue-700' : 'border-gray-300'}`}>
+                  {montaza && <svg className="w-2.5 h-2.5 text-white" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/></svg>}
+                </div>
+              </button>
             </Step>
           )}
 
