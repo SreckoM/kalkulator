@@ -3,11 +3,30 @@ import { NextRequest, NextResponse } from 'next/server'
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
-    const { name, email, city, product, type, material, profile, width, height,
-      komarnik, roletna, okapnica, podprozorska, total } = body
+    const { name, phone, email, city, product, type, material, profile, width, height,
+      komarnik, roletna, okapnica, podprozorska, montaza, total } = body
 
-    if (!name || !email || !city) {
+    if (!name || !phone) {
       return NextResponse.json({ error: 'Nedostaju obavezna polja.' }, { status: 400 })
+    }
+
+    // Log to Google Sheets (fire-and-forget)
+    const gsUrl = process.env.GOOGLE_SHEETS_SCRIPT_URL
+    if (gsUrl) {
+      fetch(gsUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          timestamp: new Date().toISOString(),
+          name, phone, email: email || '', city: city || '',
+          product: product || '', type: type || '',
+          material: material || '', profile: profile || '',
+          width: width || '', height: height || '',
+          komarnik: !!komarnik, roletna: !!roletna,
+          okapnica: !!okapnica, podprozorska: !!podprozorska, montaza: !!montaza,
+          total: total ?? '',
+        }),
+      }).catch(err => console.error('Google Sheets logging failed:', err))
     }
 
     const RESEND_API_KEY = process.env.RESEND_API_KEY
@@ -42,8 +61,9 @@ export async function POST(req: NextRequest) {
     <p class="label">Podaci o kupcu</p>
     <div class="grid">
       <div class="item"><div class="l">Ime i prezime</div><div class="v">${name}</div></div>
-      <div class="item"><div class="l">Email</div><div class="v">${email}</div></div>
-      <div class="item" style="grid-column:span 2"><div class="l">Grad</div><div class="v">📍 ${city}</div></div>
+      <div class="item"><div class="l">Telefon</div><div class="v">${phone}</div></div>
+      ${email ? `<div class="item"><div class="l">Email</div><div class="v">${email}</div></div>` : ''}
+      ${city ? `<div class="item"><div class="l">Grad</div><div class="v">📍 ${city}</div></div>` : ''}
     </div>
     <p class="label">Detalji konfiguracije</p>
     <div class="grid">
@@ -60,7 +80,8 @@ export async function POST(req: NextRequest) {
       ${roletna ? '<span class="badge">✓ Roletna</span>' : ''}
       ${okapnica ? '<span class="badge">✓ Okapnica</span>' : ''}
       ${podprozorska ? '<span class="badge">✓ Pod-prozorska daska</span>' : ''}
-      ${!komarnik && !roletna && !okapnica && !podprozorska ? '<span style="color:#9ca3af;font-size:13px">Bez dodataka</span>' : ''}
+      ${montaza ? '<span class="badge">✓ Montaža</span>' : ''}
+      ${!komarnik && !roletna && !okapnica && !podprozorska && !montaza ? '<span style="color:#9ca3af;font-size:13px">Bez dodataka</span>' : ''}
     </div>
     ${total != null ? `
     <div class="total">
@@ -79,8 +100,8 @@ export async function POST(req: NextRequest) {
       body: JSON.stringify({
         from: 'Kalkulator <onboarding@resend.dev>',
         to: ['srecko.micic@gmail.com'],
-        reply_to: email,
-        subject: `Nova ponuda: ${product} ${type} – ${name} (${city})`,
+        ...(email ? { reply_to: email } : {}),
+        subject: `Nova ponuda: ${product} ${type} – ${name}${city ? ` (${city})` : ''}`,
         html,
       }),
     })

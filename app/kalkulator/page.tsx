@@ -5,13 +5,14 @@ import type { Config, Product, Type, Material, Profile } from '@/lib/config'
 
 interface QuoteModalProps {
   onClose: () => void
-  onSubmit: (name: string, email: string, city: string) => Promise<void>
+  onSubmit: (name: string, phone: string, email: string, city: string) => Promise<void>
   cities: string[]
   submitting: boolean
 }
 
 function QuoteModal({ onClose, onSubmit, cities, submitting }: QuoteModalProps) {
   const [name, setName] = useState('')
+  const [phone, setPhone] = useState('')
   const [email, setEmail] = useState('')
   const [city, setCity] = useState('')
   const [errors, setErrors] = useState<Record<string, string>>({})
@@ -19,8 +20,8 @@ function QuoteModal({ onClose, onSubmit, cities, submitting }: QuoteModalProps) 
   function validate() {
     const e: Record<string, string> = {}
     if (!name.trim()) e.name = 'Ime je obavezno'
-    if (!email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) e.email = 'Unesite ispravan email'
-    if (!city) e.city = 'Izaberite grad'
+    if (!phone.trim()) e.phone = 'Telefon je obavezan'
+    if (email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) e.email = 'Unesite ispravan email'
     setErrors(e)
     return Object.keys(e).length === 0
   }
@@ -38,9 +39,10 @@ function QuoteModal({ onClose, onSubmit, cities, submitting }: QuoteModalProps) 
           <button onClick={onClose} className="text-gray-300 hover:text-gray-500 text-2xl leading-none cursor-pointer">×</button>
         </div>
         <div className="px-7 py-6 space-y-4">
+          {/* Required fields */}
           {[
-            { label: 'Ime i prezime', key: 'name', type: 'text', value: name, set: setName, placeholder: 'npr. Marko Marković' },
-            { label: 'Email adresa', key: 'email', type: 'email', value: email, set: setEmail, placeholder: 'npr. marko@email.com' },
+            { label: 'Ime i prezime', key: 'name', type: 'text', value: name, set: setName, placeholder: 'npr. Marko Marković', required: true },
+            { label: 'Telefon', key: 'phone', type: 'tel', value: phone, set: setPhone, placeholder: 'npr. 060 123 4567', required: true },
           ].map(f => (
             <div key={f.key}>
               <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">{f.label} <span className="text-red-400">*</span></label>
@@ -50,24 +52,31 @@ function QuoteModal({ onClose, onSubmit, cities, submitting }: QuoteModalProps) 
               {errors[f.key] && <p className="text-red-400 text-xs mt-1">{errors[f.key]}</p>}
             </div>
           ))}
+          {/* Optional fields */}
           <div>
-            <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Grad <span className="text-red-400">*</span></label>
+            <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Email <span className="text-gray-300 font-normal normal-case">(opciono)</span></label>
+            <input type="email" value={email} placeholder="npr. marko@email.com"
+              onChange={e => { setEmail(e.target.value); setErrors(p => ({ ...p, email: '' })) }}
+              className={`w-full border-2 rounded-xl px-4 py-3 text-gray-800 focus:outline-none transition-all ${errors.email ? 'border-red-300' : 'border-gray-200 focus:border-blue-500'}`} />
+            {errors.email && <p className="text-red-400 text-xs mt-1">{errors.email}</p>}
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Grad <span className="text-gray-300 font-normal normal-case">(opciono)</span></label>
             <div className="relative">
-              <select value={city} onChange={e => { setCity(e.target.value); setErrors(p => ({ ...p, city: '' })) }}
-                className={`w-full border-2 rounded-xl px-4 py-3 text-gray-800 focus:outline-none transition-all appearance-none bg-white cursor-pointer ${errors.city ? 'border-red-300' : 'border-gray-200 focus:border-blue-500'} ${!city ? 'text-gray-400' : ''}`}>
-                <option value="" disabled>Izaberite grad...</option>
+              <select value={city} onChange={e => setCity(e.target.value)}
+                className={`w-full border-2 rounded-xl px-4 py-3 text-gray-800 focus:outline-none transition-all appearance-none bg-white cursor-pointer border-gray-200 focus:border-blue-500 ${!city ? 'text-gray-400' : ''}`}>
+                <option value="">Izaberite grad...</option>
                 {cities.map(c => <option key={c} value={c}>{c}</option>)}
               </select>
               <div className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-gray-400">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
               </div>
             </div>
-            {errors.city && <p className="text-red-400 text-xs mt-1">{errors.city}</p>}
           </div>
         </div>
         <div className="px-7 pb-7 flex gap-3">
           <button onClick={onClose} className="flex-1 border-2 border-gray-200 text-gray-600 font-semibold py-3 rounded-xl hover:bg-gray-50 transition-all cursor-pointer">Otkaži</button>
-          <button onClick={() => { if (validate()) onSubmit(name, email, city) }} disabled={submitting}
+          <button onClick={() => { if (validate()) onSubmit(name, phone, email, city) }} disabled={submitting}
             className="flex-1 font-bold py-3 rounded-xl text-white transition-all shadow-md disabled:opacity-60 cursor-pointer"
             style={{ background: 'linear-gradient(135deg, #0d2f5e, #1a5fa8)' }}>
             {submitting ? <span className="flex items-center justify-center gap-2"><svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>Slanje...</span> : '📨 Pošalji upit'}
@@ -223,7 +232,7 @@ const availableProfiles = config?.profiles?.filter(p => p.material === materialI
 
   useEffect(() => { calculate() }, [calculate])
 
-  async function handleQuoteSubmit(name: string, email: string, city: string) {
+  async function handleQuoteSubmit(name: string, phone: string, email: string, city: string) {
     setSubmitting(true)
     const product = config?.products.find(p => p.id === productId)
     const type = config?.types.find(t => t.id === typeId)
@@ -234,7 +243,7 @@ const availableProfiles = config?.profiles?.filter(p => p.material === materialI
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          name, email, city,
+          name, phone, email, city,
           product: product?.name, type: type?.name,
           material: material?.name, profile: profile?.name,
           width, height, komarnik, roletna, okapnica, podprozorska, montaza, total,
