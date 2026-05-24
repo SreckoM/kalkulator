@@ -2,51 +2,50 @@
   "products": [
     {
       "id": "prozor",
-      "name": "Prozor",
-      "factor": 1
+      "name": "Prozor"
     },
     {
       "id": "balkon",
-      "name": "Balkon",
-      "factor": 1
+      "name": "Balkon"
     },
     {
       "id": "podizno",
-      "name": "Podizno / Klizni",
-      "factor": 1.2
+      "name": "Podizno / Klizni"
     },
-    { 
-      "id": "vrata", 
-      "name": "Vrata", 
-      "factor": 1.0 
+    {
+      "id": "ulazna_vrata",
+      "name": "Ulazna vrata"
+    },
+    {
+      "id": "unutrasnja_vrata",
+      "name": "Unutrašnja vrata"
     }
   ],
   "types": [
     {
       "id": "jednokrilni",
       "name": "Jednokrilni",
-      "factor": 1,
       "products": [
         "prozor",
         "balkon",
         "podizno",
-        "vrata"
+        "ulazna_vrata",
+        "unutrasnja_vrata"
       ]
     },
     {
       "id": "dvokrilni",
       "name": "Dvokrilni",
-      "factor": 1.05,
       "products": [
         "prozor",
         "balkon",
-        "podizno"
+        "ulazna_vrata",
+        "unutrasnja_vrata"
       ]
     },
     {
       "id": "dvokrilni_stub",
       "name": "Dvokrilni sa stubom",
-      "factor": 1.05,
       "products": [
         "prozor"
       ]
@@ -54,38 +53,31 @@
     {
       "id": "trokrilni",
       "name": "Trokrilni",
-      "factor": 1.15,
       "products": [
         "prozor"
       ]
-    },
-    { 
-    	"id": "sa_pomocnim", 
-    	"name": "Sa pomocnim krilom", 
-    	"factor": 1.1, 
-    	"products": ["vrata"] 
-    	}
+    }
   ],
   "materials": [
     {
       "id": "pvc",
       "name": "PVC",
-      "pricePerCm2": 1.5,
       "products": [
         "prozor",
         "balkon",
-        "vrata"
+        "ulazna_vrata",
+        "unutrasnja_vrata"
       ]
     },
     {
       "id": "alu",
       "name": "ALU",
-      "pricePerCm2": 2.2,
       "products": [
         "prozor",
         "balkon",
         "podizno",
-        "vrata"
+        "ulazna_vrata",
+        "unutrasnja_vrata"
       ]
     }
   ],
@@ -93,30 +85,220 @@
     {
       "id": "roloplast",
       "name": "Roloplast",
-      "factor": 1,
+      "perimFactor": 1,
       "material": "pvc",
       "image": ""
     },
     {
       "id": "kemerling",
       "name": "Kemerling",
-      "factor": 1.1,
+      "perimFactor": 1.1,
       "material": "pvc",
       "image": ""
     },
     {
       "id": "asistal_termo",
       "name": "Asistal Termo",
-      "factor": 1.35,
+      "perimFactor": 1,
       "material": "alu",
       "image": ""
     },
     {
       "id": "asistal_hladni",
       "name": "Asistal Hladni",
-      "factor": 1.4,
+      "perimFactor": 1.05,
       "material": "alu",
       "image": ""
+    }
+  ],
+  "formulas": [
+    {
+      "product": "prozor",
+      "type": "jednokrilni",
+      "material": "pvc",
+      "areaCoeff": 29.08,
+      "perimCoeff": 11.02,
+      "constant": 24.8
+    },
+    {
+      "product": "prozor",
+      "type": "dvokrilni",
+      "material": "pvc",
+      "areaCoeff": 32.48,
+      "perimCoeff": 12.93,
+      "constant": 40.18
+    },
+    {
+      "product": "prozor",
+      "type": "dvokrilni_stub",
+      "material": "pvc",
+      "areaCoeff": 31.21,
+      "perimCoeff": 11.98,
+      "constant": 48.24,
+      "surcharges": [
+        {
+          "minH": 120,
+          "amount": 10.1
+        },
+        {
+          "minH": 170,
+          "amount": 10.43
+        }
+      ]
+    },
+    {
+      "product": "prozor",
+      "type": "trokrilni",
+      "material": "pvc",
+      "areaCoeff": 32.48,
+      "perimCoeff": 12.93,
+      "constant": 40.18
+    },
+    {
+      "product": "balkon",
+      "type": "jednokrilni",
+      "material": "pvc",
+      "areaCoeff": 29.08,
+      "perimCoeff": 11.02,
+      "constant": 24.8
+    },
+    {
+      "product": "balkon",
+      "type": "dvokrilni",
+      "material": "pvc",
+      "areaCoeff": 32.48,
+      "perimCoeff": 12.93,
+      "constant": 40.18
+    },
+    {
+      "product": "ulazna_vrata",
+      "type": "jednokrilni",
+      "material": "pvc",
+      "areaCoeff": 34.78,
+      "perimCoeff": 7.36,
+      "constant": 83.53
+    },
+    {
+      "product": "ulazna_vrata",
+      "type": "dvokrilni",
+      "material": "pvc",
+      "areaCoeff": 25.21,
+      "perimCoeff": 19.14,
+      "constant": 94.86
+    },
+    {
+      "product": "unutrasnja_vrata",
+      "type": "jednokrilni",
+      "material": "pvc",
+      "areaCoeff": 36.1,
+      "perimCoeff": 7.46,
+      "constant": 58.85
+    },
+    {
+      "product": "unutrasnja_vrata",
+      "type": "dvokrilni",
+      "material": "pvc",
+      "areaCoeff": 25.11,
+      "perimCoeff": 20.78,
+      "constant": 50.38
+    },
+    {
+      "product": "prozor",
+      "type": "jednokrilni",
+      "material": "alu",
+      "areaCoeff": 45,
+      "perimCoeff": 18,
+      "constant": 30
+    },
+    {
+      "product": "prozor",
+      "type": "dvokrilni",
+      "material": "alu",
+      "areaCoeff": 50,
+      "perimCoeff": 20,
+      "constant": 45
+    },
+    {
+      "product": "prozor",
+      "type": "dvokrilni_stub",
+      "material": "alu",
+      "areaCoeff": 48,
+      "perimCoeff": 19,
+      "constant": 55,
+      "surcharges": [
+        {
+          "minH": 120,
+          "amount": 12
+        },
+        {
+          "minH": 170,
+          "amount": 13
+        }
+      ]
+    },
+    {
+      "product": "prozor",
+      "type": "trokrilni",
+      "material": "alu",
+      "areaCoeff": 50,
+      "perimCoeff": 20,
+      "constant": 45
+    },
+    {
+      "product": "balkon",
+      "type": "jednokrilni",
+      "material": "alu",
+      "areaCoeff": 45,
+      "perimCoeff": 18,
+      "constant": 30
+    },
+    {
+      "product": "balkon",
+      "type": "dvokrilni",
+      "material": "alu",
+      "areaCoeff": 50,
+      "perimCoeff": 20,
+      "constant": 45
+    },
+    {
+      "product": "podizno",
+      "type": "jednokrilni",
+      "material": "alu",
+      "areaCoeff": 55,
+      "perimCoeff": 22,
+      "constant": 50
+    },
+    {
+      "product": "ulazna_vrata",
+      "type": "jednokrilni",
+      "material": "alu",
+      "areaCoeff": 55,
+      "perimCoeff": 12,
+      "constant": 100
+    },
+    {
+      "product": "ulazna_vrata",
+      "type": "dvokrilni",
+      "material": "alu",
+      "areaCoeff": 40,
+      "perimCoeff": 30,
+      "constant": 120
+    },
+    {
+      "product": "unutrasnja_vrata",
+      "type": "jednokrilni",
+      "material": "alu",
+      "areaCoeff": 55,
+      "perimCoeff": 12,
+      "constant": 80
+    },
+    {
+      "product": "unutrasnja_vrata",
+      "type": "dvokrilni",
+      "material": "alu",
+      "areaCoeff": 40,
+      "perimCoeff": 32,
+      "constant": 70
     }
   ],
   "additions": {
@@ -124,29 +306,45 @@
       "name": "Komarnik",
       "pricePerCm2": 1.1,
       "enabled": true,
-      "products": ["prozor", "balkon", "podizno"]
+      "products": [
+        "prozor",
+        "balkon",
+        "podizno"
+      ]
     },
     "roletna": {
       "name": "Roletna",
       "pricePerCm2": 1.4,
       "enabled": true,
-      "products": ["prozor", "balkon", "podizno"]
+      "products": [
+        "prozor",
+        "balkon",
+        "podizno"
+      ]
     },
     "okapnica": {
       "name": "Okapnica",
       "pricePerCm": 1.2,
       "enabled": true,
-      "products": ["prozor", "balkon", "podizno"]
+      "products": [
+        "prozor",
+        "balkon",
+        "podizno"
+      ]
     },
     "podprozorska": {
       "name": "Pod-prozorska daska",
       "pricePerCm": 1.1,
       "enabled": true,
-      "products": ["prozor", "balkon", "podizno"]
+      "products": [
+        "prozor",
+        "balkon",
+        "podizno"
+      ]
     },
     "montaza": {
       "name": "Montaža",
-      "fixedPrice": 50.0,
+      "fixedPrice": 50,
       "enabled": true
     }
   }

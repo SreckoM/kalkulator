@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import type { Config, Product, Type, Material, Profile } from '@/lib/config'
+import type { Config, Product, Type, Profile, Formula } from '@/lib/config'
 
 const PW_KEY = 'admin_pw'
 
@@ -14,7 +14,7 @@ export default function AdminPage() {
   const [loading, setLoading] = useState(false)
   const [saved, setSaved] = useState(false)
   const [saveError, setSaveError] = useState('')
-  const [activeTab, setActiveTab] = useState<'products' | 'types' | 'materials' | 'profiles' | 'additions'>('products')
+  const [activeTab, setActiveTab] = useState<'products' | 'types' | 'profiles' | 'formulas' | 'additions'>('products')
 
   useEffect(() => {
     const pw = sessionStorage.getItem(PW_KEY)
@@ -27,7 +27,6 @@ export default function AdminPage() {
       const res = await fetch('/api/config')
       if (!res.ok) throw new Error()
       const data = await res.json()
-      // verify password
       const v = await fetch('/api/config', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', 'x-admin-password': pw },
@@ -61,23 +60,48 @@ export default function AdminPage() {
     setLoading(false)
   }
 
-  // Update helpers
-  function updateProduct(id: string, field: keyof Product, value: string | number) {
+  function updateProduct(id: string, field: keyof Product, value: string) {
     if (!config) return
-    setConfig({ ...config, profiles: config.profiles, products: config.products.map(p => p.id === id ? { ...p, [field]: typeof value === 'string' && field === 'factor' ? parseFloat(value) || 0 : value } : p) })
+    setConfig({ ...config, products: config.products.map(p => p.id === id ? { ...p, [field]: value } : p) })
   }
-  function updateType(id: string, field: keyof Type, value: string | number | string[]) {
+
+  function updateType(id: string, field: keyof Type, value: string | string[]) {
     if (!config) return
-    setConfig({ ...config, types: config.types.map(t => t.id === id ? { ...t, [field]: field === 'factor' ? parseFloat(value as string) || 0 : value } : t) })
+    setConfig({ ...config, types: config.types.map(t => t.id === id ? { ...t, [field]: value } : t) })
   }
-  function updateMaterial(id: string, field: keyof Material, value: string | number) {
-    if (!config) return
-    setConfig({ ...config, materials: config.materials.map(m => m.id === id ? { ...m, [field]: field === 'pricePerCm2' ? parseFloat(value as string) || 0 : value } : m) })
-  }
+
   function updateProfile(id: string, field: keyof Profile, value: string | number) {
     if (!config) return
-    setConfig({ ...config, profiles: config.profiles.map(p => p.id === id ? { ...p, [field]: field === 'factor' ? parseFloat(value as string) || 0 : value } : p) })
+    setConfig({
+      ...config,
+      profiles: config.profiles.map(p => p.id === id ? {
+        ...p,
+        [field]: field === 'perimFactor' ? parseFloat(value as string) || 0 : value
+      } : p)
+    })
   }
+
+  function updateFormula(idx: number, field: keyof Formula, value: string | number) {
+    if (!config) return
+    const updated = config.formulas.map((f, i) => i !== idx ? f : {
+      ...f,
+      [field]: typeof value === 'string' ? parseFloat(value) || 0 : value,
+    })
+    setConfig({ ...config, formulas: updated })
+  }
+
+  function updateSurcharge(formulaIdx: number, surchargeIdx: number, field: 'minH' | 'amount', value: string) {
+    if (!config) return
+    const updated = config.formulas.map((f, i) => {
+      if (i !== formulaIdx || !f.surcharges) return f
+      return {
+        ...f,
+        surcharges: f.surcharges.map((s, j) => j !== surchargeIdx ? s : { ...s, [field]: parseFloat(value) || 0 })
+      }
+    })
+    setConfig({ ...config, formulas: updated })
+  }
+
   function updateAddition(key: string, field: string, value: string | number | boolean) {
     if (!config) return
     setConfig({
@@ -92,8 +116,8 @@ export default function AdminPage() {
   const tabs = [
     { key: 'products', label: 'Proizvodi' },
     { key: 'types', label: 'Tipovi' },
-    { key: 'materials', label: 'Materijali' },
     { key: 'profiles', label: 'Profili' },
+    { key: 'formulas', label: 'Formule' },
     { key: 'additions', label: 'Dodaci' },
   ] as const
 
@@ -104,7 +128,6 @@ export default function AdminPage() {
           <div className="text-center mb-8">
             <div className="text-5xl mb-3">🔐</div>
             <h1 className="text-2xl font-bold text-gray-800">Admin Panel</h1>
-            <p className="text-gray-400 text-sm mt-1"></p>
           </div>
           <div className="space-y-4">
             <input type="password" value={password} onChange={e => setPassword(e.target.value)}
@@ -126,13 +149,19 @@ export default function AdminPage() {
 
   if (!config) return null
 
+  // Group formulas by product for display
+  const formulasByProduct = config.products.map(p => ({
+    product: p,
+    formulas: config.formulas
+      .map((f, idx) => ({ ...f, idx }))
+      .filter(f => f.product === p.id),
+  })).filter(g => g.formulas.length > 0)
+
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Top bar */}
       <div className="bg-blue-900 text-white px-6 py-4 flex items-center justify-between shadow-lg sticky top-0 z-10">
         <div className="flex items-center gap-4">
           <span className="font-bold text-lg">Admin</span>
-          <span className="text-blue-300 text-sm hidden sm:inline"></span>
         </div>
         <div className="flex items-center gap-3">
           <a href="/kalkulator" className="text-blue-300 hover:text-white text-sm transition-colors">← Kalkulator</a>
@@ -148,7 +177,6 @@ export default function AdminPage() {
 
       <div className="max-w-4xl mx-auto px-4 py-8">
 
-        {/* Tabs */}
         <div className="flex gap-2 mb-6 flex-wrap">
           {tabs.map(t => (
             <button key={t.key} onClick={() => setActiveTab(t.key)}
@@ -162,18 +190,13 @@ export default function AdminPage() {
         {activeTab === 'products' && (
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
             <div className="px-6 py-4 bg-gray-50 border-b border-gray-100">
-              <h2 className="font-bold text-gray-800">Proizvodi i faktori</h2>
-              <p className="text-gray-400 text-xs mt-0.5">Faktor se množi sa osnovnom cenom</p>
+              <h2 className="font-bold text-gray-800">Nazivi proizvoda</h2>
             </div>
             {config.products.map((p: Product) => (
               <div key={p.id} className="px-6 py-4 flex items-center gap-4 border-b border-gray-50 hover:bg-gray-50">
+                <span className="text-xs text-gray-400 font-mono w-32 flex-shrink-0">{p.id}</span>
                 <input value={p.name} onChange={e => updateProduct(p.id, 'name', e.target.value)}
                   className="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm font-medium focus:outline-none focus:border-blue-400" />
-                <div className="flex items-center gap-2 flex-shrink-0">
-                  <span className="text-gray-400 text-sm">faktor ×</span>
-                  <input type="number" step="0.05" value={p.factor} onChange={e => updateProduct(p.id, 'factor', e.target.value)}
-                    className="w-20 border border-gray-200 rounded-lg px-3 py-2 text-sm font-bold text-blue-700 text-right focus:outline-none focus:border-blue-400" />
-                </div>
               </div>
             ))}
           </div>
@@ -183,51 +206,25 @@ export default function AdminPage() {
         {activeTab === 'types' && (
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
             <div className="px-6 py-4 bg-gray-50 border-b border-gray-100">
-              <h2 className="font-bold text-gray-800">Tipovi otvaranja i faktori</h2>
+              <h2 className="font-bold text-gray-800">Tipovi otvaranja</h2>
+              <p className="text-gray-400 text-xs mt-0.5">Naziv i za koje proizvode važi</p>
             </div>
             {config.types.map((t: Type) => (
               <div key={t.id} className="px-6 py-4 border-b border-gray-50 hover:bg-gray-50">
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-4 mb-3">
+                  <span className="text-xs text-gray-400 font-mono w-32 flex-shrink-0">{t.id}</span>
                   <input value={t.name} onChange={e => updateType(t.id, 'name', e.target.value)}
                     className="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm font-medium focus:outline-none focus:border-blue-400" />
-                  <div className="flex items-center gap-2 flex-shrink-0">
-                    <span className="text-gray-400 text-sm">×</span>
-                    <input type="number" step="0.01" value={t.factor} onChange={e => updateType(t.id, 'factor', e.target.value)}
-                      className="w-20 border border-gray-200 rounded-lg px-3 py-2 text-sm font-bold text-blue-700 text-right focus:outline-none focus:border-blue-400" />
-                  </div>
                 </div>
-                <div className="mt-2 flex gap-2 flex-wrap">
-                  {(['prozor', 'balkon', 'podizno'] as const).map(prod => (
-                    <label key={prod} className="flex items-center gap-1.5 cursor-pointer text-xs text-gray-500">
-                      <input type="checkbox" checked={t.products.includes(prod)}
-                        onChange={e => updateType(t.id, 'products' as any, e.target.checked ? [...t.products, prod] : t.products.filter(x => x !== prod))}
+                <div className="ml-36 flex gap-3 flex-wrap">
+                  {config.products.map(prod => (
+                    <label key={prod.id} className="flex items-center gap-1.5 cursor-pointer text-xs text-gray-500">
+                      <input type="checkbox" checked={t.products.includes(prod.id)}
+                        onChange={e => updateType(t.id, 'products', e.target.checked ? [...t.products, prod.id] : t.products.filter(x => x !== prod.id))}
                         className="rounded" />
-                      {prod}
+                      {prod.name}
                     </label>
                   ))}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* Materials tab */}
-        {activeTab === 'materials' && (
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-            <div className="px-6 py-4 bg-gray-50 border-b border-gray-100">
-              <h2 className="font-bold text-gray-800">Materijali i cene</h2>
-              <p className="text-gray-400 text-xs mt-0.5">Cena po cm²</p>
-            </div>
-            {config.materials.map((m: Material) => (
-              <div key={m.id} className="px-6 py-4 border-b border-gray-50 hover:bg-gray-50">
-                <div className="flex items-center gap-4">
-                  <input value={m.name} onChange={e => updateMaterial(m.id, 'name', e.target.value)}
-                    className="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm font-medium focus:outline-none focus:border-blue-400" />
-                  <div className="flex items-center gap-2 flex-shrink-0">
-                    <input type="number" step="0.1" value={m.pricePerCm2} onChange={e => updateMaterial(m.id, 'pricePerCm2', e.target.value)}
-                      className="w-24 border border-gray-200 rounded-lg px-3 py-2 text-sm font-bold text-blue-700 text-right focus:outline-none focus:border-blue-400" />
-                    <span className="text-gray-400 text-sm">€/cm²</span>
-                  </div>
                 </div>
               </div>
             ))}
@@ -240,12 +237,11 @@ export default function AdminPage() {
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
               <div className="px-6 py-4 bg-gray-50 border-b border-gray-100">
                 <h2 className="font-bold text-gray-800">Profili</h2>
-                <p className="text-gray-400 text-xs mt-0.5">Faktor, naziv i URL slike za svaki profil</p>
+                <p className="text-gray-400 text-xs mt-0.5">Korekcija obima — množi se s koeficijentom obima iz formule (Roloplast = 1.0)</p>
               </div>
               {config.profiles.map((p: Profile) => (
                 <div key={p.id} className="px-6 py-5 border-b border-gray-50 hover:bg-gray-50">
                   <div className="flex items-start gap-4">
-                    {/* Image preview */}
                     <div className="flex-shrink-0">
                       {p.image ? (
                         <img src={p.image} alt={p.name} className="w-20 h-16 object-cover rounded-lg border border-gray-200" />
@@ -261,7 +257,8 @@ export default function AdminPage() {
                           className="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm font-medium focus:outline-none focus:border-blue-400" />
                         <div className="flex items-center gap-1.5 flex-shrink-0">
                           <span className="text-gray-400 text-sm">×</span>
-                          <input type="number" step="0.05" value={p.factor} onChange={e => updateProfile(p.id, 'factor', e.target.value)}
+                          <input type="number" step="0.01" value={p.perimFactor}
+                            onChange={e => updateProfile(p.id, 'perimFactor', e.target.value)}
                             className="w-20 border border-gray-200 rounded-lg px-3 py-2 text-sm font-bold text-blue-700 text-right focus:outline-none focus:border-blue-400" />
                         </div>
                       </div>
@@ -275,6 +272,74 @@ export default function AdminPage() {
               ))}
             </div>
             <p className="text-gray-400 text-xs text-center">Slike se dodaju kao URL link. Uploadujte slike na hosting i unesite URL.</p>
+          </div>
+        )}
+
+        {/* Formulas tab */}
+        {activeTab === 'formulas' && (
+          <div className="space-y-6">
+            <div className="bg-blue-50 border border-blue-200 rounded-xl px-5 py-3 text-xs text-blue-700">
+              <strong>Formula:</strong> ceil( površina_koef × površina[m²] + obim_koef × faktor_profila × obim[m] + konstanta )
+            </div>
+            {formulasByProduct.map(({ product, formulas }) => (
+              <div key={product.id} className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                <div className="px-6 py-4 bg-gray-50 border-b border-gray-100">
+                  <h2 className="font-bold text-gray-800">{product.name}</h2>
+                </div>
+                {formulas.map(f => (
+                  <div key={f.idx} className="px-6 py-5 border-b border-gray-50 hover:bg-gray-50">
+                    <div className="flex items-center gap-2 mb-3">
+                      <span className="text-xs font-semibold text-gray-600 bg-gray-100 rounded-lg px-2 py-1">
+                        {config.types.find(t => t.id === f.type)?.name ?? f.type}
+                      </span>
+                      <span className={`text-xs font-bold rounded-lg px-2 py-1 ${f.material === 'pvc' ? 'bg-blue-100 text-blue-700' : 'bg-orange-100 text-orange-700'}`}>
+                        {f.material.toUpperCase()}
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-3 gap-3">
+                      <div>
+                        <label className="block text-xs text-gray-400 mb-1">Površina (€/m²)</label>
+                        <input type="number" step="0.01" value={f.areaCoeff}
+                          onChange={e => updateFormula(f.idx, 'areaCoeff', e.target.value)}
+                          className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm font-bold text-blue-700 text-right focus:outline-none focus:border-blue-400" />
+                      </div>
+                      <div>
+                        <label className="block text-xs text-gray-400 mb-1">Obim (€/m) — Roloplast</label>
+                        <input type="number" step="0.01" value={f.perimCoeff}
+                          onChange={e => updateFormula(f.idx, 'perimCoeff', e.target.value)}
+                          className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm font-bold text-blue-700 text-right focus:outline-none focus:border-blue-400" />
+                      </div>
+                      <div>
+                        <label className="block text-xs text-gray-400 mb-1">Konstanta (€)</label>
+                        <input type="number" step="0.01" value={f.constant}
+                          onChange={e => updateFormula(f.idx, 'constant', e.target.value)}
+                          className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm font-bold text-blue-700 text-right focus:outline-none focus:border-blue-400" />
+                      </div>
+                    </div>
+                    {f.surcharges && f.surcharges.length > 0 && (
+                      <div className="mt-3 pt-3 border-t border-gray-100">
+                        <div className="text-xs text-gray-400 mb-2">Doplatci za visinu</div>
+                        <div className="space-y-2">
+                          {f.surcharges.map((s, si) => (
+                            <div key={si} className="flex items-center gap-3">
+                              <span className="text-xs text-gray-500 w-16 flex-shrink-0">≥ visina</span>
+                              <input type="number" step="1" value={s.minH}
+                                onChange={e => updateSurcharge(f.idx, si, 'minH', e.target.value)}
+                                className="w-20 border border-gray-200 rounded-lg px-2 py-1.5 text-sm font-bold text-gray-700 text-right focus:outline-none focus:border-blue-400" />
+                              <span className="text-xs text-gray-400">cm →</span>
+                              <input type="number" step="0.01" value={s.amount}
+                                onChange={e => updateSurcharge(f.idx, si, 'amount', e.target.value)}
+                                className="w-24 border border-gray-200 rounded-lg px-2 py-1.5 text-sm font-bold text-blue-700 text-right focus:outline-none focus:border-blue-400" />
+                              <span className="text-xs text-gray-400">€</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            ))}
           </div>
         )}
 
@@ -315,6 +380,27 @@ export default function AdminPage() {
                 </div>
               )
             })}
+            {/* Montaza */}
+            <div className="px-6 py-4 hover:bg-gray-50">
+              <div className="flex items-center gap-4">
+                <div className="flex-1">
+                  <div className="text-sm font-semibold text-gray-700">Montaža</div>
+                  <div className="text-xs text-gray-400">Fiksna cena ugradnje</div>
+                </div>
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  <input type="number" step="1" value={config.additions.montaza.fixedPrice ?? 0}
+                    onChange={e => updateAddition('montaza', 'fixedPrice', e.target.value)}
+                    className="w-24 border border-gray-200 rounded-lg px-3 py-2 text-sm font-bold text-blue-700 text-right focus:outline-none focus:border-blue-400" />
+                  <span className="text-gray-400 text-sm">€</span>
+                </div>
+                <label className="flex items-center gap-2 cursor-pointer flex-shrink-0">
+                  <input type="checkbox" checked={config.additions.montaza.enabled}
+                    onChange={e => updateAddition('montaza', 'enabled', e.target.checked)}
+                    className="rounded w-4 h-4 accent-blue-700" />
+                  <span className="text-xs text-gray-500">Aktivan</span>
+                </label>
+              </div>
+            </div>
           </div>
         )}
 

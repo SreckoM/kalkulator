@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
-import type { Config, Product, Type, Material, Profile } from '@/lib/config'
+import type { Config, Product, Type, Material, Profile, Formula } from '@/lib/config'
 
 interface QuoteModalProps {
   onClose: () => void
@@ -39,7 +39,6 @@ function QuoteModal({ onClose, onSubmit, cities, submitting }: QuoteModalProps) 
           <button onClick={onClose} className="text-gray-300 hover:text-gray-500 text-2xl leading-none cursor-pointer">×</button>
         </div>
         <div className="px-7 py-6 space-y-4">
-          {/* Required fields */}
           {[
             { label: 'Ime i prezime', key: 'name', type: 'text', value: name, set: setName, placeholder: 'npr. Marko Marković', required: true },
             { label: 'Telefon', key: 'phone', type: 'tel', value: phone, set: setPhone, placeholder: 'npr. 060 123 4567', required: true },
@@ -52,7 +51,6 @@ function QuoteModal({ onClose, onSubmit, cities, submitting }: QuoteModalProps) 
               {errors[f.key] && <p className="text-red-400 text-xs mt-1">{errors[f.key]}</p>}
             </div>
           ))}
-          {/* Optional fields */}
           <div>
             <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Email <span className="text-gray-300 font-normal normal-case">(opciono)</span></label>
             <input type="email" value={email} placeholder="npr. marko@email.com"
@@ -100,7 +98,6 @@ function SuccessModal({ onClose }: { onClose: () => void }) {
   )
 }
 
-// Step wrapper
 function Step({ n, title, children }: { n: number; title: string; children: React.ReactNode }) {
   return (
     <section className="p-6 border-b border-gray-100">
@@ -113,7 +110,6 @@ function Step({ n, title, children }: { n: number; title: string; children: Reac
   )
 }
 
-// Option card button
 function OptionCard({ selected, onClick, children }: { selected: boolean; onClick: () => void; children: React.ReactNode }) {
   return (
     <button onClick={onClick} className={`rounded-2xl p-4 border-2 text-left transition-all duration-200 cursor-pointer w-full ${selected ? 'border-blue-700 bg-blue-50 shadow-md' : 'border-gray-200 bg-white hover:border-blue-300 hover:bg-gray-50'}`}>
@@ -122,12 +118,54 @@ function OptionCard({ selected, onClick, children }: { selected: boolean; onClic
   )
 }
 
+function ProductIcon({ id, selected }: { id: string; selected: boolean }) {
+  const cls = selected ? 'text-blue-700' : 'text-gray-400'
+  if (id === 'prozor') return (
+    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className={cls}>
+      <rect x="3" y="3" width="18" height="18" rx="1.5"/>
+      <line x1="3" y1="9" x2="21" y2="9"/>
+      <line x1="12" y1="9" x2="12" y2="21"/>
+    </svg>
+  )
+  if (id === 'balkon') return (
+    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className={cls}>
+      <rect x="4" y="2" width="16" height="20" rx="1.5"/>
+      <line x1="4" y1="2" x2="4" y2="22"/>
+      <circle cx="14.5" cy="12" r="0.75" fill="currentColor" stroke="none"/>
+      <line x1="12" y1="2" x2="12" y2="22"/>
+    </svg>
+  )
+  if (id === 'podizno') return (
+    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className={cls}>
+      <rect x="2" y="3" width="20" height="18" rx="1.5"/>
+      <line x1="12" y1="3" x2="12" y2="21"/>
+      <polyline points="8 10 5 12 8 14"/>
+      <polyline points="16 10 19 12 16 14"/>
+    </svg>
+  )
+  if (id === 'ulazna_vrata') return (
+    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className={cls}>
+      <rect x="4" y="2" width="16" height="20" rx="1.5"/>
+      <circle cx="15" cy="12" r="1" fill="currentColor" stroke="none"/>
+      <path d="M15 11.5 L15 10" strokeWidth="1.5"/>
+      <line x1="4" y1="2" x2="4" y2="22"/>
+    </svg>
+  )
+  if (id === 'unutrasnja_vrata') return (
+    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className={cls}>
+      <rect x="4" y="2" width="16" height="20" rx="1.5"/>
+      <circle cx="15" cy="12" r="0.75" fill="currentColor" stroke="none"/>
+      <line x1="4" y1="2" x2="4" y2="22"/>
+    </svg>
+  )
+  return null
+}
+
 export default function KalkulatorPage() {
   const [config, setConfig] = useState<Config | null>(null)
   const [cities, setCities] = useState<string[]>([])
   const [loading, setLoading] = useState(true)
 
-  // Selections
   const [productId, setProductId] = useState('')
   const [typeId, setTypeId] = useState('')
   const [materialId, setMaterialId] = useState('')
@@ -158,16 +196,13 @@ export default function KalkulatorPage() {
     })
   }, [])
 
-  // Derived available options
-const availableTypes = config?.types?.filter(t => t.products?.includes(productId)) ?? []
-const availableMaterials = config?.materials?.filter(m => m.products?.includes(productId)) ?? []
-const availableProfiles = config?.profiles?.filter(p => p.material === materialId) ?? []
+  const availableTypes = config?.types?.filter(t => t.products?.includes(productId)) ?? []
+  const availableMaterials = config?.materials?.filter(m => m.products?.includes(productId)) ?? []
+  const availableProfiles = config?.profiles?.filter(p => p.material === materialId) ?? []
 
-  // Reset downstream when upstream changes
   useEffect(() => { setTypeId(''); setMaterialId(''); setProfileId('') }, [productId])
   useEffect(() => { setProfileId('') }, [materialId])
 
-  // Auto-select if only one option
   useEffect(() => { if (availableTypes.length === 1) setTypeId(availableTypes[0].id) }, [productId])
   useEffect(() => { if (availableMaterials.length === 1) setMaterialId(availableMaterials[0].id) }, [productId])
   useEffect(() => { if (availableProfiles.length === 1) setProfileId(availableProfiles[0].id) }, [materialId])
@@ -176,27 +211,43 @@ const availableProfiles = config?.profiles?.filter(p => p.material === materialI
     if (!config || !productId || !typeId || !materialId || !profileId || !width || !height) {
       setTotal(null); setBreakdown([]); return
     }
-    const w = parseFloat(width)
-    const h = parseFloat(height)
-    if (isNaN(w) || isNaN(h) || w <= 0 || h <= 0) { setTotal(null); setBreakdown([]); return }
+    const wMm = parseFloat(width)
+    const hMm = parseFloat(height)
+    if (isNaN(wMm) || isNaN(hMm) || wMm <= 0 || hMm <= 0) { setTotal(null); setBreakdown([]); return }
 
-    const product = config.products?.find(p => p.id === productId)!
-    const type = config.types?.find(t => t.id === typeId)!
-    const material = config.materials?.find(m => m.id === materialId)!
     const profile = config.profiles?.find(p => p.id === profileId)!
+    const formula = config.formulas?.find(
+      f => f.product === productId && f.type === typeId && f.material === materialId
+    )
+    if (!formula) { setTotal(null); setBreakdown([]); return }
 
     // dimensions in cm
-    const wCm = w / 10
-    const hCm = h / 10
-    const areaCm2 = wCm * hCm
+    const wCm = wMm / 10
+    const hCm = hMm / 10
+    const area = (wCm * hCm) / 10000   // m²
+    const perim = 2 * (wCm + hCm) / 100 // m
 
-    const basePrice = material.pricePerCm2 * areaCm2 * product.factor * type.factor * profile.factor
+    // height surcharges (thresholds in cm)
+    let surchargeTotal = 0
+    if (formula.surcharges) {
+      for (const s of formula.surcharges) {
+        if (hCm >= s.minH) surchargeTotal += s.amount
+      }
+    }
+
+    const basePrice = Math.ceil(
+      formula.areaCoeff * area +
+      formula.perimCoeff * profile.perimFactor * perim +
+      formula.constant +
+      surchargeTotal
+    )
 
     const bd: { label: string; value: string }[] = [
       { label: 'Osnovna cena', value: `${basePrice.toFixed(2)} €` },
     ]
 
     let addonsTotal = 0
+    const areaCm2 = wCm * hCm // cm² for additions
 
     if (komarnik && config.additions.komarnik.enabled) {
       const v = (config.additions.komarnik.pricePerCm2 ?? 0) * areaCm2
@@ -265,8 +316,6 @@ const availableProfiles = config?.profiles?.filter(p => p.material === materialI
 
   if (!config) return null
 
-  const selectedProduct = config.products?.find(p => p.id === productId)
-  const selectedMaterial = config.materials?.find(m => m.id === materialId)
   const canShowAdditions = !!profileId && !!width && !!height
 
   return (
@@ -274,7 +323,6 @@ const availableProfiles = config?.profiles?.filter(p => p.material === materialI
       {showModal && <QuoteModal onClose={() => setShowModal(false)} onSubmit={handleQuoteSubmit} cities={cities} submitting={submitting} />}
       {showSuccess && <SuccessModal onClose={() => setShowSuccess(false)} />}
 
-      {/* Header */}
       <header className="py-8 px-4">
         <div className="max-w-2xl mx-auto">
           <div className="text-white/50 text-xs font-bold tracking-widest uppercase mb-2"></div>
@@ -288,45 +336,13 @@ const availableProfiles = config?.profiles?.filter(p => p.material === materialI
       <main className="max-w-2xl mx-auto px-4 pb-16">
         <div className="bg-white rounded-3xl shadow-2xl overflow-hidden">
 
-          {/* A. Product */}
+          {/* 1. Product */}
           <Step n={1} title="Izaberite proizvod">
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-3 gap-3">
               {config.products?.map((p: Product) => (
                 <OptionCard key={p.id} selected={productId === p.id} onClick={() => setProductId(p.id)}>
                   <div className="mb-3 flex justify-center">
-                    {p.id === 'prozor' && (
-                      <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className={profileId || materialId || typeId || productId === p.id ? 'text-blue-700' : 'text-gray-500'}>
-                        {/* Window icon */}
-                        <rect x="3" y="3" width="18" height="18" rx="1.5"/>
-                        <line x1="3" y1="9" x2="21" y2="9"/>
-                        <line x1="12" y1="9" x2="12" y2="21"/>
-                      </svg>
-                    )}
-                    {p.id === 'balkon' && (
-                      <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className={productId === p.id ? 'text-blue-700' : 'text-gray-500'}>
-                        {/* Door icon */}
-                        <rect x="4" y="2" width="16" height="20" rx="1.5"/>
-                        <line x1="4" y1="2" x2="4" y2="22"/>
-                        <circle cx="14.5" cy="12" r="0.75" fill="currentColor" stroke="none"/>
-                        <line x1="12" y1="2" x2="12" y2="22"/>
-                      </svg>
-                    )}
-                    {p.id === 'podizno' && (
-                      <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className={productId === p.id ? 'text-blue-700' : 'text-gray-500'}>
-                        {/* Sliding door icon */}
-                        <rect x="2" y="3" width="20" height="18" rx="1.5"/>
-                        <line x1="12" y1="3" x2="12" y2="21"/>
-                        <polyline points="8 10 5 12 8 14"/>
-                        <polyline points="16 10 19 12 16 14"/>
-                      </svg>
-                    )}
-                    {p.id === 'vrata' && (
-  			<svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className={productId === p.id ? 'text-blue-700' : 'text-gray-500'}>
-		    	<rect x="4" y="2" width="16" height="20" rx="1.5"/>
-		    	<circle cx="15" cy="12" r="1" fill="currentColor" stroke="none"/>
-		    	<line x1="4" y1="2" x2="4" y2="22"/>
-		  </svg>
-		)}
+                    <ProductIcon id={p.id} selected={productId === p.id} />
                   </div>
                   <div className={`text-sm font-bold leading-tight ${productId === p.id ? 'text-blue-800' : 'text-gray-700'}`}>{p.name}</div>
                 </OptionCard>
@@ -334,35 +350,33 @@ const availableProfiles = config?.profiles?.filter(p => p.material === materialI
             </div>
           </Step>
 
-          {/* B. Type */}
+          {/* 2. Type */}
           {productId && (
             <Step n={2} title="Tip otvaranja">
               <div className="grid grid-cols-2 gap-3">
                 {availableTypes?.map((t: Type) => (
                   <OptionCard key={t.id} selected={typeId === t.id} onClick={() => setTypeId(t.id)}>
                     <div className={`text-sm font-bold ${typeId === t.id ? 'text-blue-800' : 'text-gray-700'}`}>{t.name}</div>
-                    <div className="text-xs text-gray-400 mt-1">faktor ×{t.factor}</div>
                   </OptionCard>
                 ))}
               </div>
             </Step>
           )}
 
-          {/* C. Material */}
+          {/* 3. Material */}
           {typeId && (
             <Step n={3} title="Materijal">
               <div className="grid grid-cols-2 gap-3">
                 {availableMaterials?.map((m: Material) => (
                   <OptionCard key={m.id} selected={materialId === m.id} onClick={() => setMaterialId(m.id)}>
                     <div className={`text-lg font-black mb-1 ${materialId === m.id ? 'text-blue-800' : 'text-gray-700'}`}>{m.name}</div>
-                    <div className="text-xs text-gray-400">{m.pricePerCm2} €/cm²</div>
                   </OptionCard>
                 ))}
               </div>
             </Step>
           )}
 
-          {/* D. Profile */}
+          {/* 4. Profile */}
           {materialId && (
             <Step n={4} title="Profil">
               <div className="grid grid-cols-2 gap-3">
@@ -376,14 +390,13 @@ const availableProfiles = config?.profiles?.filter(p => p.material === materialI
                       </div>
                     )}
                     <div className={`text-sm font-bold ${profileId === p.id ? 'text-blue-800' : 'text-gray-700'}`}>{p.name}</div>
-                    <div className="text-xs text-gray-400 mt-0.5">faktor ×{p.factor}</div>
                   </OptionCard>
                 ))}
               </div>
             </Step>
           )}
 
-          {/* F. Dimensions */}
+          {/* 5. Dimensions */}
           {profileId && (
             <Step n={5} title="Dimenzije (mm)">
               <div className="grid grid-cols-2 gap-4">
@@ -402,13 +415,15 @@ const availableProfiles = config?.profiles?.filter(p => p.material === materialI
               </div>
               {width && height && parseFloat(width) > 0 && parseFloat(height) > 0 && (
                 <p className="text-xs text-gray-400 mt-3">
-                  Površina: {(parseFloat(width) / 10 * (parseFloat(height) / 10)).toFixed(1)} cm²
+                  Površina: {((parseFloat(width) / 10) * (parseFloat(height) / 10) / 10000).toFixed(3)} m²
+                  &nbsp;·&nbsp;
+                  Obim: {(2 * (parseFloat(width) / 10 + parseFloat(height) / 10) / 100).toFixed(2)} m
                 </p>
               )}
             </Step>
           )}
 
-          {/* E. Additions */}
+          {/* 6. Additions */}
           {canShowAdditions && ['komarnik', 'roletna', 'okapnica', 'podprozorska'].some(k => {
             const a = config.additions[k as keyof typeof config.additions]
             return a.enabled && (!a.products || a.products.includes(productId))
@@ -420,7 +435,6 @@ const availableProfiles = config?.profiles?.filter(p => p.material === materialI
                     key: 'komarnik', label: 'Komarnik', val: komarnik, set: setKomarnik, desc: 'po m²',
                     icon: (
                       <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                        {/* mesh/screen icon */}
                         <rect x="3" y="3" width="18" height="18" rx="1.5"/>
                         <line x1="3" y1="8" x2="21" y2="8"/><line x1="3" y1="13" x2="21" y2="13"/><line x1="3" y1="18" x2="21" y2="18"/>
                         <line x1="8" y1="3" x2="8" y2="21"/><line x1="13" y1="3" x2="13" y2="21"/><line x1="18" y1="3" x2="18" y2="21"/>
@@ -431,7 +445,6 @@ const availableProfiles = config?.profiles?.filter(p => p.material === materialI
                     key: 'roletna', label: 'Roletna', val: roletna, set: setRoletna, desc: 'po m²',
                     icon: (
                       <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                        {/* roller shutter icon */}
                         <rect x="3" y="3" width="18" height="3" rx="1"/>
                         <rect x="3" y="8" width="18" height="2.5" rx="0.75"/>
                         <rect x="3" y="12.5" width="18" height="2.5" rx="0.75"/>
@@ -444,7 +457,6 @@ const availableProfiles = config?.profiles?.filter(p => p.material === materialI
                     key: 'okapnica', label: 'Okapnica', val: okapnica, set: setOkapnica, desc: 'po širini',
                     icon: (
                       <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                        {/* drip edge / flashing icon */}
                         <rect x="2" y="5" width="20" height="5" rx="1"/>
                         <path d="M4 10 L4 17 Q4 19 6 19 L18 19 Q20 19 20 17 L20 10"/>
                         <line x1="8" y1="14" x2="8" y2="19"/><line x1="12" y1="14" x2="12" y2="19"/><line x1="16" y1="14" x2="16" y2="19"/>
@@ -455,7 +467,6 @@ const availableProfiles = config?.profiles?.filter(p => p.material === materialI
                     key: 'podprozorska', label: 'Pod-prozorska daska', val: podprozorska, set: setPodprozorska, desc: 'po širini',
                     icon: (
                       <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                        {/* window sill / board icon */}
                         <rect x="2" y="14" width="20" height="4" rx="1"/>
                         <rect x="5" y="4" width="14" height="10" rx="1"/>
                         <line x1="12" y1="4" x2="12" y2="14"/>
@@ -481,7 +492,7 @@ const availableProfiles = config?.profiles?.filter(p => p.material === materialI
             </Step>
           )}
 
-          {/* G. Installation */}
+          {/* 7. Installation */}
           {canShowAdditions && config.additions.montaza?.enabled && (
             <Step n={7} title="Ugradnja">
               <button onClick={() => setMontaza(v => !v)}
