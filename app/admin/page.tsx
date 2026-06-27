@@ -36,21 +36,20 @@ export default function AdminPage() {
   async function tryLoad(pw: string) {
     setLoading(true)
     try {
-      const res = await fetch('/api/config')
-      if (!res.ok) throw new Error()
-      const data = await res.json()
-      const v = await fetch('/api/config', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json', 'x-admin-password': pw },
-        body: JSON.stringify(data),
-      })
-      if (v.ok) {
+      const [authRes, configRes] = await Promise.all([
+        fetch('/api/auth', { method: 'POST', headers: { 'x-admin-password': pw } }),
+        fetch('/api/config'),
+      ])
+      if (authRes.ok && configRes.ok) {
+        const data = await configRes.json()
         setConfig(data)
         setAuthed(true)
         sessionStorage.setItem(PW_KEY, pw)
         setStoredPw(pw)
-      } else {
+      } else if (!authRes.ok) {
         setAuthError('Pogrešna lozinka.')
+      } else {
+        setAuthError('Greška pri učitavanju.')
       }
     } catch {
       setAuthError('Greška pri učitavanju.')
