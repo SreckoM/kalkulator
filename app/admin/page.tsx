@@ -25,6 +25,8 @@ export default function AdminPage() {
   const [newEntry, setNewEntry] = useState<Partial<PriceEntry>>({ ...EMPTY })
   const [filterProduct, setFilterProduct] = useState('')
   const [filterMaterial, setFilterMaterial] = useState('')
+  const [importing, setImporting] = useState(false)
+  const [importResult, setImportResult] = useState<{ ok: boolean; msg: string } | null>(null)
 
   useEffect(() => {
     const pw = sessionStorage.getItem(PW_KEY)
@@ -54,6 +56,32 @@ export default function AdminPage() {
       setAuthError('Greška pri učitavanju.')
     }
     setLoading(false)
+  }
+
+  async function handleImport(file: File) {
+    setImporting(true)
+    setImportResult(null)
+    try {
+      const form = new FormData()
+      form.append('file', file)
+      const res = await fetch('/api/import', {
+        method: 'POST',
+        headers: { 'x-admin-password': storedPw },
+        body: form,
+      })
+      const data = await res.json()
+      if (res.ok) {
+        setImportResult({ ok: true, msg: `Uspešno uvezeno ${data.count} unosa.` })
+        // reload config from server
+        const cfg = await fetch('/api/config').then(r => r.json())
+        setConfig(cfg)
+      } else {
+        setImportResult({ ok: false, msg: data.error || 'Greška pri uvozu.' })
+      }
+    } catch {
+      setImportResult({ ok: false, msg: 'Greška pri uvozu.' })
+    }
+    setImporting(false)
   }
 
   async function handleSave() {
@@ -166,6 +194,29 @@ export default function AdminPage() {
       {saveError && <div className="bg-red-50 border-l-4 border-red-500 px-6 py-3 text-red-800 text-sm font-medium">❌ {saveError}</div>}
 
       <div className="max-w-6xl mx-auto px-4 py-8 space-y-6">
+
+        {/* Excel import */}
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+          <div className="px-6 py-4 bg-gray-50 border-b border-gray-100">
+            <h2 className="font-bold text-gray-800">Uvoz iz Excel-a</h2>
+            <p className="text-xs text-gray-400 mt-0.5">Učitava .xlsx fajl i zamenjuje ceo cenovnik. Ostale postavke (montaža, header, footer) ostaju nepromenjene.</p>
+          </div>
+          <div className="px-6 py-5 flex items-center gap-4 flex-wrap">
+            <label className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold border-2 border-dashed cursor-pointer transition-all ${importing ? 'opacity-50 cursor-not-allowed border-gray-200 text-gray-400' : 'border-blue-300 text-blue-700 hover:bg-blue-50'}`}>
+              {importing
+                ? <><svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg> Uvoz u toku...</>
+                : <><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg> Izaberi .xlsx fajl</>
+              }
+              <input type="file" accept=".xlsx" className="hidden" disabled={importing}
+                onChange={e => { const f = e.target.files?.[0]; if (f) { handleImport(f); e.target.value = '' } }} />
+            </label>
+            {importResult && (
+              <div className={`text-sm font-medium ${importResult.ok ? 'text-green-600' : 'text-red-500'}`}>
+                {importResult.ok ? '✅' : '❌'} {importResult.msg}
+              </div>
+            )}
+          </div>
+        </div>
 
         {/* Add new entry */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
