@@ -431,6 +431,12 @@ export default function AdminPage() {
                 onChange={e => setConfig({ ...config, header: { ...config.header, subtitle: e.target.value } })}
                 className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-400" />
             </div>
+            <div>
+              <label className="block text-xs text-gray-400 mb-1">Napomena ispod cene</label>
+              <input value={config.header?.disclaimer ?? ''}
+                onChange={e => setConfig({ ...config, header: { ...config.header, disclaimer: e.target.value } })}
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-400" />
+            </div>
           </div>
         </div>
 

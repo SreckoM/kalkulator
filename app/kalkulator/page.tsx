@@ -497,7 +497,7 @@ export default function KalkulatorPage() {
                 ) : (
                   <div className="text-white/30 text-4xl font-black" style={{ fontFamily: 'Georgia, serif' }}>--</div>
                 )}
-                <p className="text-white/40 text-xs mt-2">* Cene su informativnog karaktera. Za tačnu ponudu kontaktirajte nas.</p>
+                {config.header?.disclaimer && <p className="text-white/40 text-xs mt-2">{config.header.disclaimer}</p>}
               </div>
               <button onClick={() => setShowModal(true)}
                 className="flex-shrink-0 bg-yellow-400 hover:bg-yellow-300 active:scale-95 text-gray-900 font-black py-3 px-6 rounded-xl transition-all shadow-lg text-sm cursor-pointer">

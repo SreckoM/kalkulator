@@ -20,7 +20,7 @@ export interface PriceEntry {
 export interface Config {
   pricelist: PriceEntry[]
   montaza: { fixedPrice: number; enabled: boolean }
-  header: { title: string; subtitle: string }
+  header: { title: string; subtitle: string; disclaimer: string }
   footer: { lines: string[] }
 }
 
