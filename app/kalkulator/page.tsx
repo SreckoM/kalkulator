@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
-import type { Config, Product, Type, Material, Profile, Formula } from '@/lib/config'
+import type { Config, PriceEntry } from '@/lib/config'
 
 interface QuoteModalProps {
   onClose: () => void
@@ -40,8 +40,8 @@ function QuoteModal({ onClose, onSubmit, cities, submitting }: QuoteModalProps) 
         </div>
         <div className="px-7 py-6 space-y-4">
           {[
-            { label: 'Ime i prezime', key: 'name', type: 'text', value: name, set: setName, placeholder: 'npr. Marko Marković', required: true },
-            { label: 'Telefon', key: 'phone', type: 'tel', value: phone, set: setPhone, placeholder: 'npr. 060 123 4567', required: true },
+            { label: 'Ime i prezime', key: 'name', type: 'text', value: name, set: setName, placeholder: 'npr. Marko Marković' },
+            { label: 'Telefon', key: 'phone', type: 'tel', value: phone, set: setPhone, placeholder: 'npr. 060 123 4567' },
           ].map(f => (
             <div key={f.key}>
               <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">{f.label} <span className="text-red-400">*</span></label>
@@ -77,7 +77,9 @@ function QuoteModal({ onClose, onSubmit, cities, submitting }: QuoteModalProps) 
           <button onClick={() => { if (validate()) onSubmit(name, phone, email, city) }} disabled={submitting}
             className="flex-1 font-bold py-3 rounded-xl text-white transition-all shadow-md disabled:opacity-60 cursor-pointer"
             style={{ background: 'linear-gradient(135deg, #0d2f5e, #1a5fa8)' }}>
-            {submitting ? <span className="flex items-center justify-center gap-2"><svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>Slanje...</span> : '📨 Pošalji upit'}
+            {submitting
+              ? <span className="flex items-center justify-center gap-2"><svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>Slanje...</span>
+              : '📨 Pošalji upit'}
           </button>
         </div>
       </div>
@@ -118,32 +120,17 @@ function OptionCard({ selected, onClick, children }: { selected: boolean; onClic
   )
 }
 
-function ProductIcon({ id, selected }: { id: string; selected: boolean }) {
+function ProductIcon({ product, selected }: { product: string; selected: boolean }) {
   const cls = selected ? 'text-blue-700' : 'text-gray-400'
-  if (id === 'prozor') return (
+  const lower = product.toLowerCase()
+  if (lower.includes('dvokrilni prozor') || lower.includes('dvokrilni pro')) return (
     <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className={cls}>
-      <rect x="3" y="3" width="18" height="18" rx="1.5"/>
-      <line x1="3" y1="9" x2="21" y2="9"/>
+      <rect x="2" y="3" width="20" height="18" rx="1.5"/>
+      <line x1="2" y1="9" x2="22" y2="9"/>
       <line x1="12" y1="9" x2="12" y2="21"/>
     </svg>
   )
-  if (id === 'balkon') return (
-    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className={cls}>
-      <rect x="4" y="2" width="16" height="20" rx="1.5"/>
-      <line x1="4" y1="2" x2="4" y2="22"/>
-      <circle cx="14.5" cy="12" r="0.75" fill="currentColor" stroke="none"/>
-      <line x1="12" y1="2" x2="12" y2="22"/>
-    </svg>
-  )
-  if (id === 'podizno') return (
-    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className={cls}>
-      <rect x="2" y="3" width="20" height="18" rx="1.5"/>
-      <line x1="12" y1="3" x2="12" y2="21"/>
-      <polyline points="8 10 5 12 8 14"/>
-      <polyline points="16 10 19 12 16 14"/>
-    </svg>
-  )
-  if (id === 'ulazna_vrata') return (
+  if (lower.includes('prozor')) return (
     <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className={cls}>
       <rect x="4" y="2" width="16" height="20" rx="1.5"/>
       <circle cx="15" cy="12" r="1" fill="currentColor" stroke="none"/>
@@ -151,14 +138,45 @@ function ProductIcon({ id, selected }: { id: string; selected: boolean }) {
       <line x1="4" y1="2" x2="4" y2="22"/>
     </svg>
   )
-  if (id === 'unutrasnja_vrata') return (
+  if (lower.includes('balkon dvokrilni') || lower.includes('balkon dvo')) return (
+    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className={cls}>
+      <rect x="2" y="2" width="20" height="20" rx="1.5"/>
+      <line x1="12" y1="2" x2="12" y2="22"/>
+      <circle cx="8.5" cy="12" r="0.75" fill="currentColor" stroke="none"/>
+      <circle cx="15.5" cy="12" r="0.75" fill="currentColor" stroke="none"/>
+    </svg>
+  )
+  if (lower.includes('balkon')) return (
     <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className={cls}>
       <rect x="4" y="2" width="16" height="20" rx="1.5"/>
-      <circle cx="15" cy="12" r="0.75" fill="currentColor" stroke="none"/>
+      <circle cx="14.5" cy="12" r="0.75" fill="currentColor" stroke="none"/>
+    </svg>
+  )
+  if (lower.includes('dvokrilna vrata') || lower.includes('dvokrilna')) return (
+    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className={cls}>
+      <rect x="2" y="2" width="20" height="20" rx="1.5"/>
+      <line x1="12" y1="2" x2="12" y2="22"/>
+      <circle cx="9.5" cy="12" r="0.75" fill="currentColor" stroke="none"/>
+      <circle cx="14.5" cy="12" r="0.75" fill="currentColor" stroke="none"/>
+    </svg>
+  )
+  if (lower.includes('vrata')) return (
+    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className={cls}>
+      <rect x="4" y="2" width="16" height="20" rx="1.5"/>
+      <circle cx="15" cy="12" r="1" fill="currentColor" stroke="none"/>
       <line x1="4" y1="2" x2="4" y2="22"/>
     </svg>
   )
-  return null
+  return (
+    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className={cls}>
+      <rect x="3" y="3" width="18" height="18" rx="1.5"/>
+    </svg>
+  )
+}
+
+// Stable order for products as they appear in the price list
+function uniqueOrdered<T>(arr: T[]): T[] {
+  return arr.filter((v, i, a) => a.indexOf(v) === i)
 }
 
 export default function KalkulatorPage() {
@@ -166,14 +184,14 @@ export default function KalkulatorPage() {
   const [cities, setCities] = useState<string[]>([])
   const [loading, setLoading] = useState(true)
 
-  const [productId, setProductId] = useState('')
-  const [typeId, setTypeId] = useState('')
-  const [materialId, setMaterialId] = useState('')
-  const [profileId, setProfileId] = useState('')
-  const [width, setWidth] = useState('')
-  const [height, setHeight] = useState('')
-  const [komarnik, setKomarnik] = useState(false)
+  const [material, setMaterial] = useState('')
+  const [product, setProduct] = useState('')
+  const [staklo, setStaklo] = useState('')
+  const [profile, setProfile] = useState('')
+  const [selectedEntry, setSelectedEntry] = useState<PriceEntry | null>(null)
+
   const [roletna, setRoletna] = useState(false)
+  const [komarnik, setKomarnik] = useState(false)
   const [okapnica, setOkapnica] = useState(false)
   const [podprozorska, setPodprozorska] = useState(false)
   const [montaza, setMontaza] = useState(false)
@@ -196,108 +214,86 @@ export default function KalkulatorPage() {
     })
   }, [])
 
-  const availableTypes = config?.types?.filter(t => t.products?.includes(productId)) ?? []
-  const availableMaterials = config?.materials?.filter(m => m.products?.includes(productId)) ?? []
-  const availableProfiles = config?.profiles?.filter(p => p.material === materialId) ?? []
+  // Cascading filter
+  const pl = config?.pricelist ?? []
+  const materials = uniqueOrdered(pl.map(e => e.material))
+  const byMaterial = pl.filter(e => e.material === material)
+  const products = uniqueOrdered(byMaterial.map(e => e.product))
+  const byProduct = byMaterial.filter(e => e.product === product)
+  const stakloOptions = uniqueOrdered(byProduct.filter(e => e.staklo !== '').map(e => e.staklo))
+  const hasStaklo = stakloOptions.length > 0
+  const byStaklo = hasStaklo ? byProduct.filter(e => e.staklo === staklo) : byProduct
+  const profiles = uniqueOrdered(byStaklo.map(e => e.profile))
+  const sizes = byStaklo.filter(e => e.profile === profile).sort((a, b) => a.width !== b.width ? a.width - b.width : a.height - b.height)
 
-  useEffect(() => { setTypeId(''); setMaterialId(''); setProfileId('') }, [productId])
-  useEffect(() => { setProfileId('') }, [materialId])
+  // Reset cascade
+  useEffect(() => { setProduct(''); setStaklo(''); setProfile(''); setSelectedEntry(null) }, [material])
+  useEffect(() => { setStaklo(''); setProfile(''); setSelectedEntry(null) }, [product])
+  useEffect(() => { setProfile(''); setSelectedEntry(null) }, [staklo])
+  useEffect(() => { setSelectedEntry(null) }, [profile])
 
-  useEffect(() => { if (availableTypes.length === 1) setTypeId(availableTypes[0].id) }, [productId])
-  useEffect(() => { if (availableMaterials.length === 1) setMaterialId(availableMaterials[0].id) }, [productId])
-  useEffect(() => { if (availableProfiles.length === 1) setProfileId(availableProfiles[0].id) }, [materialId])
+  // Auto-select when only one option
+  useEffect(() => { if (materials.length === 1) setMaterial(materials[0]) }, [config])
+  useEffect(() => { if (products.length === 1) setProduct(products[0]) }, [material])
+  useEffect(() => { if (stakloOptions.length === 1) setStaklo(stakloOptions[0]) }, [product])
+  useEffect(() => { if (profiles.length === 1) setProfile(profiles[0]) }, [staklo, product])
 
   const calculate = useCallback(() => {
-    if (!config || !productId || !typeId || !materialId || !profileId || !width || !height) {
-      setTotal(null); setBreakdown([]); return
-    }
-    const wMm = parseFloat(width)
-    const hMm = parseFloat(height)
-    if (isNaN(wMm) || isNaN(hMm) || wMm <= 0 || hMm <= 0) { setTotal(null); setBreakdown([]); return }
+    if (!config || !selectedEntry) { setTotal(null); setBreakdown([]); return }
 
-    const profile = config.profiles?.find(p => p.id === profileId)!
-    const formula = config.formulas?.find(
-      f => f.product === productId && f.type === typeId && f.material === materialId
-    )
-    if (!formula) { setTotal(null); setBreakdown([]); return }
-
-    // dimensions in cm
-    const wCm = wMm / 10
-    const hCm = hMm / 10
-    const area = (wCm * hCm) / 10000   // m²
-    const perim = 2 * (wCm + hCm) / 100 // m
-
-    // height surcharges (thresholds in cm)
-    let surchargeTotal = 0
-    if (formula.surcharges) {
-      for (const s of formula.surcharges) {
-        if (hCm >= s.minH) surchargeTotal += s.amount
-      }
-    }
-
-    const basePrice = Math.ceil(
-      formula.areaCoeff * area +
-      formula.perimCoeff * profile.perimFactor * perim +
-      formula.constant +
-      surchargeTotal
-    )
+    const multiplier = (1 + selectedEntry.rabat / 100) * (1 + selectedEntry.pdv / 100)
+    const adj = (v: number) => Math.round(v * multiplier * 100) / 100
 
     const bd: { label: string; value: string }[] = [
-      { label: 'Osnovna cena', value: `${basePrice.toFixed(2)} €` },
+      { label: 'Osnovna cena', value: `${adj(selectedEntry.price).toFixed(2)} €` },
     ]
+    let sum = adj(selectedEntry.price)
 
-    let addonsTotal = 0
-    const areaCm2 = wCm * hCm // cm² for additions
-
-    if (komarnik && config.additions.komarnik.enabled) {
-      const v = (config.additions.komarnik.pricePerCm2 ?? 0) * areaCm2
-      addonsTotal += v
-      bd.push({ label: 'Komarnik', value: `${v.toFixed(2)} €` })
-    }
-    if (roletna && config.additions.roletna.enabled) {
-      const v = (config.additions.roletna.pricePerCm2 ?? 0) * areaCm2
-      addonsTotal += v
+    if (roletna && selectedEntry.roletna > 0) {
+      const v = adj(selectedEntry.roletna)
+      sum += v
       bd.push({ label: 'Roletna', value: `${v.toFixed(2)} €` })
     }
-    if (okapnica && config.additions.okapnica.enabled) {
-      const v = (config.additions.okapnica.pricePerCm ?? 0) * wCm
-      addonsTotal += v
+    if (komarnik && selectedEntry.komarnik > 0) {
+      const v = adj(selectedEntry.komarnik)
+      sum += v
+      bd.push({ label: 'Komarnik', value: `${v.toFixed(2)} €` })
+    }
+    if (okapnica && selectedEntry.okapnica > 0) {
+      const v = adj(selectedEntry.okapnica)
+      sum += v
       bd.push({ label: 'Okapnica', value: `${v.toFixed(2)} €` })
     }
-    if (podprozorska && config.additions.podprozorska.enabled) {
-      const v = (config.additions.podprozorska.pricePerCm ?? 0) * wCm
-      addonsTotal += v
+    if (podprozorska && selectedEntry.podprozorska > 0) {
+      const v = adj(selectedEntry.podprozorska)
+      sum += v
       bd.push({ label: 'Pod-prozorska daska', value: `${v.toFixed(2)} €` })
     }
-    if (montaza && config.additions.montaza?.enabled) {
-      const v = config.additions.montaza.fixedPrice ?? 0
-      addonsTotal += v
+    if (montaza && config.montaza.enabled) {
+      const v = config.montaza.fixedPrice
+      sum += v
       bd.push({ label: 'Montaža', value: `${v.toFixed(2)} €` })
     }
 
-    const grand = basePrice + addonsTotal
-    setTotal(Math.round(grand * 100) / 100)
+    setTotal(Math.round(sum * 100) / 100)
     setBreakdown(bd)
     setAnimKey(k => k + 1)
-  }, [config, productId, typeId, materialId, profileId, width, height, komarnik, roletna, okapnica, podprozorska, montaza])
+  }, [config, selectedEntry, roletna, komarnik, okapnica, podprozorska, montaza])
 
   useEffect(() => { calculate() }, [calculate])
 
   async function handleQuoteSubmit(name: string, phone: string, email: string, city: string) {
     setSubmitting(true)
-    const product = config?.products.find(p => p.id === productId)
-    const type = config?.types.find(t => t.id === typeId)
-    const material = config?.materials.find(m => m.id === materialId)
-    const profile = config?.profiles.find(p => p.id === profileId)
     try {
       const res = await fetch('/api/quote', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name, phone, email, city,
-          product: product?.name, type: type?.name,
-          material: material?.name, profile: profile?.name,
-          width, height, komarnik, roletna, okapnica, podprozorska, montaza, total,
+          product, material, profile,
+          staklo: staklo || 'N/A',
+          width: selectedEntry?.width, height: selectedEntry?.height,
+          roletna, komarnik, okapnica, podprozorska, montaza, total,
         }),
       })
       if (res.ok) { setShowModal(false); setShowSuccess(true) }
@@ -313,10 +309,16 @@ export default function KalkulatorPage() {
       </div>
     )
   }
-
   if (!config) return null
 
-  const canShowAdditions = !!profileId && !!width && !!height
+  // Dynamic step counter
+  let stepN = 0
+  const nextStep = () => ++stepN
+
+  const showAdditions = !!selectedEntry && (
+    selectedEntry.roletna > 0 || selectedEntry.komarnik > 0 ||
+    selectedEntry.okapnica > 0 || selectedEntry.podprozorska > 0
+  )
 
   return (
     <div className="min-h-screen" style={{ background: 'linear-gradient(135deg, #0d2f5e 0%, #1a5fa8 60%, #2a82d4 100%)' }}>
@@ -325,164 +327,120 @@ export default function KalkulatorPage() {
 
       <header className="py-8 px-4">
         <div className="max-w-2xl mx-auto">
-          <div className="text-white/50 text-xs font-bold tracking-widest uppercase mb-2"></div>
           <h1 className="text-white text-4xl font-black tracking-tight" style={{ fontFamily: 'Georgia, serif' }}>
-            Kalkulator stolarije
+            {config.header?.title ?? 'Kalkulator stolarije'}
           </h1>
-          <p className="text-white/60 text-sm mt-2">PVC i ALU prozori, vrata i klizni sistemi</p>
+          <p className="text-white/60 text-sm mt-2">{config.header?.subtitle ?? ''}</p>
         </div>
       </header>
 
       <main className="max-w-2xl mx-auto px-4 pb-16">
         <div className="bg-white rounded-3xl shadow-2xl overflow-hidden">
 
-          {/* 1. Product */}
-          <Step n={1} title="Izaberite proizvod">
-            <div className="grid grid-cols-3 gap-3">
-              {config.products?.map((p: Product) => (
-                <OptionCard key={p.id} selected={productId === p.id} onClick={() => setProductId(p.id)}>
-                  <div className="mb-3 flex justify-center">
-                    <ProductIcon id={p.id} selected={productId === p.id} />
-                  </div>
-                  <div className={`text-sm font-bold leading-tight ${productId === p.id ? 'text-blue-800' : 'text-gray-700'}`}>{p.name}</div>
+          {/* 1. Material */}
+          <Step n={nextStep()} title="Materijal">
+            <div className="grid grid-cols-2 gap-3">
+              {materials.map(m => (
+                <OptionCard key={m} selected={material === m} onClick={() => setMaterial(m)}>
+                  <div className={`text-2xl font-black mb-1 ${material === m ? 'text-blue-800' : 'text-gray-700'}`}>{m}</div>
                 </OptionCard>
               ))}
             </div>
           </Step>
 
-          {/* 2. Type */}
-          {productId && (
-            <Step n={2} title="Tip otvaranja">
-              <div className="grid grid-cols-2 gap-3">
-                {availableTypes?.map((t: Type) => (
-                  <OptionCard key={t.id} selected={typeId === t.id} onClick={() => setTypeId(t.id)}>
-                    <div className={`text-sm font-bold ${typeId === t.id ? 'text-blue-800' : 'text-gray-700'}`}>{t.name}</div>
+          {/* 2. Product */}
+          {material && (
+            <Step n={nextStep()} title="Proizvod">
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                {products.map(p => (
+                  <OptionCard key={p} selected={product === p} onClick={() => setProduct(p)}>
+                    <div className="mb-3 flex justify-center">
+                      <ProductIcon product={p} selected={product === p} />
+                    </div>
+                    <div className={`text-sm font-bold leading-tight ${product === p ? 'text-blue-800' : 'text-gray-700'}`}>{p}</div>
                   </OptionCard>
                 ))}
               </div>
             </Step>
           )}
 
-          {/* 3. Material */}
-          {typeId && (
-            <Step n={3} title="Materijal">
+          {/* 3. Staklo (glass type) — only for products that have it */}
+          {product && hasStaklo && (
+            <Step n={nextStep()} title="Vrsta stakla">
               <div className="grid grid-cols-2 gap-3">
-                {availableMaterials?.map((m: Material) => (
-                  <OptionCard key={m.id} selected={materialId === m.id} onClick={() => setMaterialId(m.id)}>
-                    <div className={`text-lg font-black mb-1 ${materialId === m.id ? 'text-blue-800' : 'text-gray-700'}`}>{m.name}</div>
+                {stakloOptions.map(s => (
+                  <OptionCard key={s} selected={staklo === s} onClick={() => setStaklo(s)}>
+                    <div className={`text-sm font-bold mb-1 ${staklo === s ? 'text-blue-800' : 'text-gray-700'}`}>{s} staklo</div>
+                    <div className={`text-xs ${staklo === s ? 'text-blue-500' : 'text-gray-400'}`}>
+                      {s === 'Dvoslojno' ? 'Standardna toplotna izolacija' : 'Poboljšana toplotna izolacija'}
+                    </div>
                   </OptionCard>
                 ))}
               </div>
             </Step>
           )}
 
-          {/* 4. Profile */}
-          {materialId && (
-            <Step n={4} title="Profil">
+          {/* Profile */}
+          {(product && (!hasStaklo || staklo)) && (
+            <Step n={nextStep()} title="Profil">
               <div className="grid grid-cols-2 gap-3">
-                {availableProfiles?.map((p: Profile) => (
-                  <OptionCard key={p.id} selected={profileId === p.id} onClick={() => setProfileId(p.id)}>
-                    {p.image ? (
-                      <img src={p.image} alt={p.name} className="w-full h-20 object-cover rounded-lg mb-3" />
-                    ) : (
-                      <div className={`w-full h-16 rounded-lg mb-3 flex items-center justify-center text-xs font-semibold ${profileId === p.id ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-400'}`}>
-                        Nema slike
-                      </div>
-                    )}
-                    <div className={`text-sm font-bold ${profileId === p.id ? 'text-blue-800' : 'text-gray-700'}`}>{p.name}</div>
+                {profiles.map(p => (
+                  <OptionCard key={p} selected={profile === p} onClick={() => setProfile(p)}>
+                    <div className={`text-sm font-bold ${profile === p ? 'text-blue-800' : 'text-gray-700'}`}>{p}</div>
                   </OptionCard>
                 ))}
               </div>
             </Step>
           )}
 
-          {/* 5. Dimensions */}
-          {profileId && (
-            <Step n={5} title="Dimenzije (mm)">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Širina (mm)</label>
-                  <input type="number" min="100" max="5000" placeholder="npr. 1200" value={width}
-                    onChange={e => setWidth(e.target.value)}
-                    className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-gray-800 text-lg font-bold focus:outline-none focus:border-blue-500 transition-all" />
+          {/* Dimensions */}
+          {profile && (
+            <Step n={nextStep()} title="Dimenzije">
+              {sizes.length === 0 ? (
+                <p className="text-sm text-gray-400 text-center py-4">Nema dostupnih dimenzija za izabranu kombinaciju.</p>
+              ) : (
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                  {sizes.map((e, i) => {
+                    const isSelected = selectedEntry === e || (selectedEntry?.width === e.width && selectedEntry?.height === e.height && selectedEntry?.price === e.price)
+                    const displayPrice = Math.round(e.price * (1 + e.rabat / 100) * (1 + e.pdv / 100) * 100) / 100
+                    return (
+                      <button key={i} onClick={() => setSelectedEntry(e)}
+                        className={`rounded-2xl p-4 border-2 text-left transition-all duration-200 cursor-pointer w-full ${isSelected ? 'border-blue-700 bg-blue-50 shadow-md' : 'border-gray-200 bg-white hover:border-blue-300 hover:bg-gray-50'}`}>
+                        <div className={`text-base font-black leading-tight ${isSelected ? 'text-blue-800' : 'text-gray-800'}`}>
+                          {e.width} × {e.height}<span className={`text-xs font-semibold ml-0.5 ${isSelected ? 'text-blue-500' : 'text-gray-400'}`}>mm</span>
+                        </div>
+                        <div className={`text-sm font-bold mt-1 ${isSelected ? 'text-blue-600' : 'text-gray-500'}`}>
+                          {displayPrice.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €
+                        </div>
+                      </button>
+                    )
+                  })}
                 </div>
-                <div>
-                  <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Visina (mm)</label>
-                  <input type="number" min="100" max="5000" placeholder="npr. 1400" value={height}
-                    onChange={e => setHeight(e.target.value)}
-                    className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-gray-800 text-lg font-bold focus:outline-none focus:border-blue-500 transition-all" />
-                </div>
-              </div>
-              {width && height && parseFloat(width) > 0 && parseFloat(height) > 0 && (
-                <p className="text-xs text-gray-400 mt-3">
-                  Površina: {((parseFloat(width) / 10) * (parseFloat(height) / 10) / 10000).toFixed(3)} m²
-                  &nbsp;·&nbsp;
-                  Obim: {(2 * (parseFloat(width) / 10 + parseFloat(height) / 10) / 100).toFixed(2)} m
-                </p>
               )}
             </Step>
           )}
 
-          {/* 6. Additions */}
-          {canShowAdditions && ['komarnik', 'roletna', 'okapnica', 'podprozorska'].some(k => {
-            const a = config.additions[k as keyof typeof config.additions]
-            return a.enabled && (!a.products || a.products.includes(productId))
-          }) && (
-            <Step n={6} title="Dodaci (opciono)">
+          {/* Additions — shown only if the selected entry has any */}
+          {showAdditions && (
+            <Step n={nextStep()} title="Dodaci (opciono)">
               <div className="grid grid-cols-2 gap-3">
                 {([
-                  {
-                    key: 'komarnik', label: 'Komarnik', val: komarnik, set: setKomarnik, desc: 'po m²',
-                    icon: (
-                      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                        <rect x="3" y="3" width="18" height="18" rx="1.5"/>
-                        <line x1="3" y1="8" x2="21" y2="8"/><line x1="3" y1="13" x2="21" y2="13"/><line x1="3" y1="18" x2="21" y2="18"/>
-                        <line x1="8" y1="3" x2="8" y2="21"/><line x1="13" y1="3" x2="13" y2="21"/><line x1="18" y1="3" x2="18" y2="21"/>
-                      </svg>
-                    )
-                  },
-                  {
-                    key: 'roletna', label: 'Roletna', val: roletna, set: setRoletna, desc: 'po m²',
-                    icon: (
-                      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                        <rect x="3" y="3" width="18" height="3" rx="1"/>
-                        <rect x="3" y="8" width="18" height="2.5" rx="0.75"/>
-                        <rect x="3" y="12.5" width="18" height="2.5" rx="0.75"/>
-                        <rect x="3" y="17" width="18" height="2.5" rx="0.75"/>
-                        <line x1="10" y1="6" x2="10" y2="6.1"/><line x1="14" y1="6" x2="14" y2="6.1"/>
-                      </svg>
-                    )
-                  },
-                  {
-                    key: 'okapnica', label: 'Okapnica', val: okapnica, set: setOkapnica, desc: 'po širini',
-                    icon: (
-                      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                        <rect x="2" y="5" width="20" height="5" rx="1"/>
-                        <path d="M4 10 L4 17 Q4 19 6 19 L18 19 Q20 19 20 17 L20 10"/>
-                        <line x1="8" y1="14" x2="8" y2="19"/><line x1="12" y1="14" x2="12" y2="19"/><line x1="16" y1="14" x2="16" y2="19"/>
-                      </svg>
-                    )
-                  },
-                  {
-                    key: 'podprozorska', label: 'Pod-prozorska daska', val: podprozorska, set: setPodprozorska, desc: 'po širini',
-                    icon: (
-                      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                        <rect x="2" y="14" width="20" height="4" rx="1"/>
-                        <rect x="5" y="4" width="14" height="10" rx="1"/>
-                        <line x1="12" y1="4" x2="12" y2="14"/>
-                        <line x1="5" y1="9" x2="19" y2="9"/>
-                      </svg>
-                    )
-                  },
-                ] as const).filter(a => {
-                  const cfg = config.additions[a.key]
-                  return cfg.enabled && (!cfg.products || cfg.products.includes(productId))
-                }).map(a => (
+                  { key: 'roletna', label: 'Roletna', val: roletna, set: setRoletna, price: selectedEntry!.roletna,
+                    icon: <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="3" rx="1"/><rect x="3" y="8" width="18" height="2.5" rx="0.75"/><rect x="3" y="12.5" width="18" height="2.5" rx="0.75"/><rect x="3" y="17" width="18" height="2.5" rx="0.75"/></svg> },
+                  { key: 'komarnik', label: 'Komarnik', val: komarnik, set: setKomarnik, price: selectedEntry!.komarnik,
+                    icon: <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="1.5"/><line x1="3" y1="8" x2="21" y2="8"/><line x1="3" y1="13" x2="21" y2="13"/><line x1="3" y1="18" x2="21" y2="18"/><line x1="8" y1="3" x2="8" y2="21"/><line x1="13" y1="3" x2="13" y2="21"/><line x1="18" y1="3" x2="18" y2="21"/></svg> },
+                  { key: 'okapnica', label: 'Okapnica', val: okapnica, set: setOkapnica, price: selectedEntry!.okapnica,
+                    icon: <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="5" width="20" height="5" rx="1"/><path d="M4 10 L4 17 Q4 19 6 19 L18 19 Q20 19 20 17 L20 10"/></svg> },
+                  { key: 'podprozorska', label: 'Pod-prozorska daska', val: podprozorska, set: setPodprozorska, price: selectedEntry!.podprozorska,
+                    icon: <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="14" width="20" height="4" rx="1"/><rect x="5" y="4" width="14" height="10" rx="1"/><line x1="12" y1="4" x2="12" y2="14"/><line x1="5" y1="9" x2="19" y2="9"/></svg> },
+                ] as const).filter(a => a.price > 0).map(a => (
                   <button key={a.key} onClick={() => a.set(v => !v)}
                     className={`rounded-xl p-4 border-2 text-left transition-all duration-200 cursor-pointer ${a.val ? 'border-blue-700 bg-blue-50' : 'border-gray-200 bg-white hover:border-blue-300'}`}>
                     <div className={`mb-2 ${a.val ? 'text-blue-700' : 'text-gray-400'}`}>{a.icon}</div>
                     <div className={`text-sm font-semibold leading-tight ${a.val ? 'text-blue-800' : 'text-gray-700'}`}>{a.label}</div>
-                    <div className="text-xs text-gray-400 mt-0.5">{a.desc}</div>
+                    <div className={`text-xs font-bold mt-0.5 ${a.val ? 'text-blue-600' : 'text-gray-400'}`}>
+                      {a.price.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €
+                    </div>
                     <div className={`mt-2 w-4 h-4 rounded border-2 flex items-center justify-center transition-all ${a.val ? 'bg-blue-700 border-blue-700' : 'border-gray-300'}`}>
                       {a.val && <svg className="w-2.5 h-2.5 text-white" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/></svg>}
                     </div>
@@ -492,9 +450,9 @@ export default function KalkulatorPage() {
             </Step>
           )}
 
-          {/* 7. Installation */}
-          {canShowAdditions && config.additions.montaza?.enabled && (
-            <Step n={7} title="Ugradnja">
+          {/* Montaža */}
+          {selectedEntry && config.montaza.enabled && (
+            <Step n={nextStep()} title="Ugradnja">
               <button onClick={() => setMontaza(v => !v)}
                 className={`w-full rounded-xl p-4 border-2 text-left transition-all duration-200 cursor-pointer flex items-center gap-4 ${montaza ? 'border-blue-700 bg-blue-50' : 'border-gray-200 bg-white hover:border-blue-300'}`}>
                 <div className={montaza ? 'text-blue-700' : 'text-gray-400'}>
@@ -504,7 +462,9 @@ export default function KalkulatorPage() {
                 </div>
                 <div className="flex-1">
                   <div className={`text-sm font-bold ${montaza ? 'text-blue-800' : 'text-gray-700'}`}>Montaža</div>
-                  <div className="text-xs text-gray-400 mt-0.5">fiksna cena: {(config.additions.montaza.fixedPrice ?? 0).toFixed(2)} €</div>
+                  <div className={`text-xs font-bold mt-0.5 ${montaza ? 'text-blue-600' : 'text-gray-400'}`}>
+                    {config.montaza.fixedPrice.toFixed(2)} €
+                  </div>
                 </div>
                 <div className={`w-4 h-4 rounded border-2 flex items-center justify-center transition-all ${montaza ? 'bg-blue-700 border-blue-700' : 'border-gray-300'}`}>
                   {montaza && <svg className="w-2.5 h-2.5 text-white" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/></svg>}
@@ -536,7 +496,7 @@ export default function KalkulatorPage() {
                 ) : (
                   <div className="text-white/30 text-4xl font-black" style={{ fontFamily: 'Georgia, serif' }}>--</div>
                 )}
-                <p className="text-white/40 text-xs mt-2">* Okvirna cena bez PDV-a</p>
+                <p className="text-white/40 text-xs mt-2">* Okvirna cena sa PDV-om</p>
               </div>
               <button onClick={() => setShowModal(true)}
                 className="flex-shrink-0 bg-yellow-400 hover:bg-yellow-300 active:scale-95 text-gray-900 font-black py-3 px-6 rounded-xl transition-all shadow-lg text-sm cursor-pointer">
@@ -547,8 +507,7 @@ export default function KalkulatorPage() {
         </div>
 
         <div className="text-center text-white/30 text-xs mt-8 space-y-1">
-          <p>Bul. Mihajla Pupina 5, Novi Beograd • Ilije Stojadinovića 51, Beograd</p>
-          <p>011/770 24 35 • 060/3020 669</p>
+          {config.footer?.lines?.map((line, i) => <p key={i}>{line}</p>)}
           <p className="mt-4"><a href="/admin" className="underline hover:text-white/50">Admin panel</a></p>
         </div>
       </main>

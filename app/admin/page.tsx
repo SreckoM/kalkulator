@@ -1,9 +1,16 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import type { Config, Product, Type, Profile, Formula } from '@/lib/config'
+import type { Config, PriceEntry } from '@/lib/config'
 
 const PW_KEY = 'admin_pw'
+
+const EMPTY: Partial<PriceEntry> = {
+  product: '', material: '', profile: '', staklo: '',
+  width: undefined, height: undefined, price: undefined,
+  roletna: 0, komarnik: 0, okapnica: 0, podprozorska: 0,
+  rabat: 0, pdv: 0,
+}
 
 export default function AdminPage() {
   const [password, setPassword] = useState('')
@@ -14,7 +21,10 @@ export default function AdminPage() {
   const [loading, setLoading] = useState(false)
   const [saved, setSaved] = useState(false)
   const [saveError, setSaveError] = useState('')
-  const [activeTab, setActiveTab] = useState<'products' | 'types' | 'profiles' | 'formulas' | 'additions'>('products')
+
+  const [newEntry, setNewEntry] = useState<Partial<PriceEntry>>({ ...EMPTY })
+  const [filterProduct, setFilterProduct] = useState('')
+  const [filterMaterial, setFilterMaterial] = useState('')
 
   useEffect(() => {
     const pw = sessionStorage.getItem(PW_KEY)
@@ -60,66 +70,42 @@ export default function AdminPage() {
     setLoading(false)
   }
 
-  function updateProduct(id: string, field: keyof Product, value: string) {
+  function addEntry() {
     if (!config) return
-    setConfig({ ...config, products: config.products.map(p => p.id === id ? { ...p, [field]: value } : p) })
+    const { product, material, profile, staklo, width, height, price, roletna, komarnik, okapnica, podprozorska } = newEntry
+    if (!product || !material || !profile || width === undefined || height === undefined || price === undefined) return
+    const entry: PriceEntry = {
+      product, material, profile, staklo: staklo ?? '',
+      width, height, price,
+      roletna: roletna ?? 0, komarnik: komarnik ?? 0,
+      okapnica: okapnica ?? 0, podprozorska: podprozorska ?? 0,
+      rabat: newEntry.rabat ?? 0, pdv: newEntry.pdv ?? 0,
+    }
+    setConfig({ ...config, pricelist: [...config.pricelist, entry] })
+    setNewEntry({ ...EMPTY })
   }
 
-  function updateType(id: string, field: keyof Type, value: string | string[]) {
+  function deleteEntry(idx: number) {
     if (!config) return
-    setConfig({ ...config, types: config.types.map(t => t.id === id ? { ...t, [field]: value } : t) })
+    setConfig({ ...config, pricelist: config.pricelist.filter((_, i) => i !== idx) })
   }
 
-  function updateProfile(id: string, field: keyof Profile, value: string | number) {
+  function updateEntry(idx: number, field: keyof PriceEntry, value: string) {
     if (!config) return
+    const numFields: (keyof PriceEntry)[] = ['width', 'height', 'price', 'roletna', 'komarnik', 'okapnica', 'podprozorska']
     setConfig({
       ...config,
-      profiles: config.profiles.map(p => p.id === id ? {
-        ...p,
-        [field]: field === 'perimFactor' ? parseFloat(value as string) || 0 : value
-      } : p)
+      pricelist: config.pricelist.map((e, i) => i !== idx ? e : {
+        ...e,
+        [field]: numFields.includes(field) ? (parseFloat(value) || 0) : value,
+      })
     })
   }
 
-  function updateFormula(idx: number, field: keyof Formula, value: string | number) {
+  function updateMontaza(field: 'fixedPrice' | 'enabled', value: string | boolean) {
     if (!config) return
-    const updated = config.formulas.map((f, i) => i !== idx ? f : {
-      ...f,
-      [field]: typeof value === 'string' ? parseFloat(value) || 0 : value,
-    })
-    setConfig({ ...config, formulas: updated })
+    setConfig({ ...config, montaza: { ...config.montaza, [field]: field === 'fixedPrice' ? parseFloat(value as string) || 0 : value } })
   }
-
-  function updateSurcharge(formulaIdx: number, surchargeIdx: number, field: 'minH' | 'amount', value: string) {
-    if (!config) return
-    const updated = config.formulas.map((f, i) => {
-      if (i !== formulaIdx || !f.surcharges) return f
-      return {
-        ...f,
-        surcharges: f.surcharges.map((s, j) => j !== surchargeIdx ? s : { ...s, [field]: parseFloat(value) || 0 })
-      }
-    })
-    setConfig({ ...config, formulas: updated })
-  }
-
-  function updateAddition(key: string, field: string, value: string | number | boolean) {
-    if (!config) return
-    setConfig({
-      ...config,
-      additions: {
-        ...config.additions,
-        [key]: { ...config.additions[key as keyof Config['additions']], [field]: typeof value === 'string' ? parseFloat(value) || 0 : value }
-      }
-    })
-  }
-
-  const tabs = [
-    { key: 'products', label: 'Proizvodi' },
-    { key: 'types', label: 'Tipovi' },
-    { key: 'profiles', label: 'Profili' },
-    { key: 'formulas', label: 'Formule' },
-    { key: 'additions', label: 'Dodaci' },
-  ] as const
 
   if (!authed) {
     return (
@@ -149,20 +135,24 @@ export default function AdminPage() {
 
   if (!config) return null
 
-  // Group formulas by product for display
-  const formulasByProduct = config.products.map(p => ({
-    product: p,
-    formulas: config.formulas
-      .map((f, idx) => ({ ...f, idx }))
-      .filter(f => f.product === p.id),
-  })).filter(g => g.formulas.length > 0)
+  const pl = config.pricelist
+  const allProducts = Array.from(new Set(pl.map(e => e.product)))
+  const allMaterials = Array.from(new Set(pl.map(e => e.material)))
+  const allProfiles = Array.from(new Set(pl.map(e => e.profile)))
+
+  const filtered = pl.filter(e =>
+    (!filterProduct || e.product === filterProduct) &&
+    (!filterMaterial || e.material === filterMaterial)
+  )
+
+  // Cascading options for "add new" form
+  const newProductOptions = Array.from(new Set(pl.filter(e => !newEntry.material || e.material === newEntry.material).map(e => e.product)))
+  const newProfileOptions = Array.from(new Set(pl.filter(e => !newEntry.material || e.material === newEntry.material).map(e => e.profile)))
 
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="bg-blue-900 text-white px-6 py-4 flex items-center justify-between shadow-lg sticky top-0 z-10">
-        <div className="flex items-center gap-4">
-          <span className="font-bold text-lg">Admin</span>
-        </div>
+        <span className="font-bold text-lg">Admin</span>
         <div className="flex items-center gap-3">
           <a href="/kalkulator" className="text-blue-300 hover:text-white text-sm transition-colors">← Kalkulator</a>
           <button onClick={handleSave} disabled={loading}
@@ -175,236 +165,254 @@ export default function AdminPage() {
       {saved && <div className="bg-green-50 border-l-4 border-green-500 px-6 py-3 text-green-800 text-sm font-medium">✅ Sačuvano!</div>}
       {saveError && <div className="bg-red-50 border-l-4 border-red-500 px-6 py-3 text-red-800 text-sm font-medium">❌ {saveError}</div>}
 
-      <div className="max-w-4xl mx-auto px-4 py-8">
+      <div className="max-w-6xl mx-auto px-4 py-8 space-y-6">
 
-        <div className="flex gap-2 mb-6 flex-wrap">
-          {tabs.map(t => (
-            <button key={t.key} onClick={() => setActiveTab(t.key)}
-              className={`px-5 py-2.5 rounded-xl text-sm font-semibold transition-all cursor-pointer ${activeTab === t.key ? 'bg-blue-800 text-white shadow-md' : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-200'}`}>
-              {t.label}
-            </button>
-          ))}
-        </div>
-
-        {/* Products tab */}
-        {activeTab === 'products' && (
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-            <div className="px-6 py-4 bg-gray-50 border-b border-gray-100">
-              <h2 className="font-bold text-gray-800">Nazivi proizvoda</h2>
-            </div>
-            {config.products.map((p: Product) => (
-              <div key={p.id} className="px-6 py-4 flex items-center gap-4 border-b border-gray-50 hover:bg-gray-50">
-                <span className="text-xs text-gray-400 font-mono w-32 flex-shrink-0">{p.id}</span>
-                <input value={p.name} onChange={e => updateProduct(p.id, 'name', e.target.value)}
-                  className="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm font-medium focus:outline-none focus:border-blue-400" />
-              </div>
-            ))}
+        {/* Add new entry */}
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+          <div className="px-6 py-4 bg-gray-50 border-b border-gray-100">
+            <h2 className="font-bold text-gray-800">Dodaj novi unos</h2>
           </div>
-        )}
-
-        {/* Types tab */}
-        {activeTab === 'types' && (
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-            <div className="px-6 py-4 bg-gray-50 border-b border-gray-100">
-              <h2 className="font-bold text-gray-800">Tipovi otvaranja</h2>
-              <p className="text-gray-400 text-xs mt-0.5">Naziv i za koje proizvode važi</p>
+          <div className="px-6 py-5 space-y-4">
+            {/* Identification fields */}
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+              <div>
+                <label className="block text-xs text-gray-400 mb-1">Materijal</label>
+                <input list="materials-list" value={newEntry.material ?? ''} placeholder="npr. PVC"
+                  onChange={e => setNewEntry({ ...newEntry, material: e.target.value })}
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-400" />
+                <datalist id="materials-list">{allMaterials.map(m => <option key={m} value={m} />)}</datalist>
+              </div>
+              <div>
+                <label className="block text-xs text-gray-400 mb-1">Proizvod</label>
+                <input list="products-list" value={newEntry.product ?? ''} placeholder="npr. Jednokrilni prozor"
+                  onChange={e => setNewEntry({ ...newEntry, product: e.target.value })}
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-400" />
+                <datalist id="products-list">{newProductOptions.map(p => <option key={p} value={p} />)}</datalist>
+              </div>
+              <div>
+                <label className="block text-xs text-gray-400 mb-1">Profil</label>
+                <input list="profiles-list" value={newEntry.profile ?? ''} placeholder="npr. Kemerling 70"
+                  onChange={e => setNewEntry({ ...newEntry, profile: e.target.value })}
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-400" />
+                <datalist id="profiles-list">{newProfileOptions.map(p => <option key={p} value={p} />)}</datalist>
+              </div>
+              <div>
+                <label className="block text-xs text-gray-400 mb-1">Staklo</label>
+                <select value={newEntry.staklo ?? ''} onChange={e => setNewEntry({ ...newEntry, staklo: e.target.value })}
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-400 bg-white">
+                  <option value="">Ne važi (vrata)</option>
+                  <option value="Dvoslojno">Dvoslojno</option>
+                  <option value="Troslojno">Troslojno</option>
+                </select>
+              </div>
             </div>
-            {config.types.map((t: Type) => (
-              <div key={t.id} className="px-6 py-4 border-b border-gray-50 hover:bg-gray-50">
-                <div className="flex items-center gap-4 mb-3">
-                  <span className="text-xs text-gray-400 font-mono w-32 flex-shrink-0">{t.id}</span>
-                  <input value={t.name} onChange={e => updateType(t.id, 'name', e.target.value)}
-                    className="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm font-medium focus:outline-none focus:border-blue-400" />
-                </div>
-                <div className="ml-36 flex gap-3 flex-wrap">
-                  {config.products.map(prod => (
-                    <label key={prod.id} className="flex items-center gap-1.5 cursor-pointer text-xs text-gray-500">
-                      <input type="checkbox" checked={t.products.includes(prod.id)}
-                        onChange={e => updateType(t.id, 'products', e.target.checked ? [...t.products, prod.id] : t.products.filter(x => x !== prod.id))}
-                        className="rounded" />
-                      {prod.name}
-                    </label>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
 
-        {/* Profiles tab */}
-        {activeTab === 'profiles' && (
-          <div className="space-y-4">
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-              <div className="px-6 py-4 bg-gray-50 border-b border-gray-100">
-                <h2 className="font-bold text-gray-800">Profili</h2>
-                <p className="text-gray-400 text-xs mt-0.5">Korekcija obima — množi se s koeficijentom obima iz formule (Roloplast = 1.0)</p>
+            {/* Dimensions and base price */}
+            <div className="grid grid-cols-3 gap-3">
+              <div>
+                <label className="block text-xs text-gray-400 mb-1">Širina (mm)</label>
+                <input type="number" min="1" placeholder="npr. 1200" value={newEntry.width ?? ''}
+                  onChange={e => setNewEntry({ ...newEntry, width: parseFloat(e.target.value) || undefined })}
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm font-bold focus:outline-none focus:border-blue-400" />
               </div>
-              {config.profiles.map((p: Profile) => (
-                <div key={p.id} className="px-6 py-5 border-b border-gray-50 hover:bg-gray-50">
-                  <div className="flex items-start gap-4">
-                    <div className="flex-shrink-0">
-                      {p.image ? (
-                        <img src={p.image} alt={p.name} className="w-20 h-16 object-cover rounded-lg border border-gray-200" />
-                      ) : (
-                        <div className="w-20 h-16 rounded-lg border-2 border-dashed border-gray-200 flex items-center justify-center text-gray-300 text-xs text-center">
-                          nema slike
-                        </div>
-                      )}
-                    </div>
-                    <div className="flex-1 space-y-2">
-                      <div className="flex gap-2">
-                        <input value={p.name} onChange={e => updateProfile(p.id, 'name', e.target.value)}
-                          className="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm font-medium focus:outline-none focus:border-blue-400" />
-                        <div className="flex items-center gap-1.5 flex-shrink-0">
-                          <span className="text-gray-400 text-sm">×</span>
-                          <input type="number" step="0.01" value={p.perimFactor}
-                            onChange={e => updateProfile(p.id, 'perimFactor', e.target.value)}
-                            className="w-20 border border-gray-200 rounded-lg px-3 py-2 text-sm font-bold text-blue-700 text-right focus:outline-none focus:border-blue-400" />
-                        </div>
-                      </div>
-                      <input value={p.image} onChange={e => updateProfile(p.id, 'image', e.target.value)}
-                        placeholder="URL slike (https://...)"
-                        className="w-full border border-gray-200 rounded-lg px-3 py-2 text-xs text-gray-600 focus:outline-none focus:border-blue-400" />
-                      <div className="text-xs text-gray-400">Materijal: <span className="font-semibold text-gray-600">{p.material.toUpperCase()}</span></div>
-                    </div>
-                  </div>
+              <div>
+                <label className="block text-xs text-gray-400 mb-1">Visina (mm)</label>
+                <input type="number" min="1" placeholder="npr. 1400" value={newEntry.height ?? ''}
+                  onChange={e => setNewEntry({ ...newEntry, height: parseFloat(e.target.value) || undefined })}
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm font-bold focus:outline-none focus:border-blue-400" />
+              </div>
+              <div>
+                <label className="block text-xs text-gray-400 mb-1">Cena (€)</label>
+                <input type="number" min="0" step="0.01" placeholder="npr. 150" value={newEntry.price ?? ''}
+                  onChange={e => setNewEntry({ ...newEntry, price: parseFloat(e.target.value) || undefined })}
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm font-bold text-blue-700 focus:outline-none focus:border-blue-400" />
+              </div>
+            </div>
+
+            {/* Addition prices */}
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+              {(['roletna', 'komarnik', 'okapnica', 'podprozorska'] as const).map(k => (
+                <div key={k}>
+                  <label className="block text-xs text-gray-400 mb-1">{k === 'podprozorska' ? 'Pod-prozorska daska' : k.charAt(0).toUpperCase() + k.slice(1)} (€)</label>
+                  <input type="number" min="0" step="0.01" placeholder="0 = ne prikazuj" value={newEntry[k] ?? 0}
+                    onChange={e => setNewEntry({ ...newEntry, [k]: parseFloat(e.target.value) || 0 })}
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm font-bold focus:outline-none focus:border-blue-400" />
                 </div>
               ))}
             </div>
-            <p className="text-gray-400 text-xs text-center">Slike se dodaju kao URL link. Uploadujte slike na hosting i unesite URL.</p>
-          </div>
-        )}
 
-        {/* Formulas tab */}
-        {activeTab === 'formulas' && (
-          <div className="space-y-6">
-            <div className="bg-blue-50 border border-blue-200 rounded-xl px-5 py-3 text-xs text-blue-700">
-              <strong>Formula:</strong> ceil( površina_koef × površina[m²] + obim_koef × faktor_profila × obim[m] + konstanta )
+            {/* Rabat and PDV */}
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+              <div>
+                <label className="block text-xs text-gray-400 mb-1">Rabat (%)</label>
+                <input type="number" min="0" max="100" step="1" value={newEntry.rabat ?? 0}
+                  onChange={e => setNewEntry({ ...newEntry, rabat: parseFloat(e.target.value) || 0 })}
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm font-bold text-orange-600 focus:outline-none focus:border-blue-400" />
+              </div>
+              <div>
+                <label className="block text-xs text-gray-400 mb-1">PDV (%)</label>
+                <input type="number" min="0" max="100" step="1" value={newEntry.pdv ?? 0}
+                  onChange={e => setNewEntry({ ...newEntry, pdv: parseFloat(e.target.value) || 0 })}
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm font-bold text-orange-600 focus:outline-none focus:border-blue-400" />
+              </div>
             </div>
-            {formulasByProduct.map(({ product, formulas }) => (
-              <div key={product.id} className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-                <div className="px-6 py-4 bg-gray-50 border-b border-gray-100">
-                  <h2 className="font-bold text-gray-800">{product.name}</h2>
-                </div>
-                {formulas.map(f => (
-                  <div key={f.idx} className="px-6 py-5 border-b border-gray-50 hover:bg-gray-50">
-                    <div className="flex items-center gap-2 mb-3">
-                      <span className="text-xs font-semibold text-gray-600 bg-gray-100 rounded-lg px-2 py-1">
-                        {config.types.find(t => t.id === f.type)?.name ?? f.type}
-                      </span>
-                      <span className={`text-xs font-bold rounded-lg px-2 py-1 ${f.material === 'pvc' ? 'bg-blue-100 text-blue-700' : 'bg-orange-100 text-orange-700'}`}>
-                        {f.material.toUpperCase()}
-                      </span>
-                    </div>
-                    <div className="grid grid-cols-3 gap-3">
-                      <div>
-                        <label className="block text-xs text-gray-400 mb-1">Površina (€/m²)</label>
-                        <input type="number" step="0.01" value={f.areaCoeff}
-                          onChange={e => updateFormula(f.idx, 'areaCoeff', e.target.value)}
-                          className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm font-bold text-blue-700 text-right focus:outline-none focus:border-blue-400" />
-                      </div>
-                      <div>
-                        <label className="block text-xs text-gray-400 mb-1">Obim (€/m) — Roloplast</label>
-                        <input type="number" step="0.01" value={f.perimCoeff}
-                          onChange={e => updateFormula(f.idx, 'perimCoeff', e.target.value)}
-                          className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm font-bold text-blue-700 text-right focus:outline-none focus:border-blue-400" />
-                      </div>
-                      <div>
-                        <label className="block text-xs text-gray-400 mb-1">Konstanta (€)</label>
-                        <input type="number" step="0.01" value={f.constant}
-                          onChange={e => updateFormula(f.idx, 'constant', e.target.value)}
-                          className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm font-bold text-blue-700 text-right focus:outline-none focus:border-blue-400" />
-                      </div>
-                    </div>
-                    {f.surcharges && f.surcharges.length > 0 && (
-                      <div className="mt-3 pt-3 border-t border-gray-100">
-                        <div className="text-xs text-gray-400 mb-2">Doplatci za visinu</div>
-                        <div className="space-y-2">
-                          {f.surcharges.map((s, si) => (
-                            <div key={si} className="flex items-center gap-3">
-                              <span className="text-xs text-gray-500 w-16 flex-shrink-0">≥ visina</span>
-                              <input type="number" step="1" value={s.minH}
-                                onChange={e => updateSurcharge(f.idx, si, 'minH', e.target.value)}
-                                className="w-20 border border-gray-200 rounded-lg px-2 py-1.5 text-sm font-bold text-gray-700 text-right focus:outline-none focus:border-blue-400" />
-                              <span className="text-xs text-gray-400">cm →</span>
-                              <input type="number" step="0.01" value={s.amount}
-                                onChange={e => updateSurcharge(f.idx, si, 'amount', e.target.value)}
-                                className="w-24 border border-gray-200 rounded-lg px-2 py-1.5 text-sm font-bold text-blue-700 text-right focus:outline-none focus:border-blue-400" />
-                              <span className="text-xs text-gray-400">€</span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                ))}
+
+            <button onClick={addEntry}
+              disabled={!newEntry.product || !newEntry.material || !newEntry.profile || !newEntry.width || !newEntry.height || newEntry.price === undefined}
+              className="bg-blue-700 hover:bg-blue-800 text-white font-bold py-2 px-6 rounded-xl text-sm transition-all disabled:opacity-40 cursor-pointer disabled:cursor-not-allowed">
+              + Dodaj unos
+            </button>
+          </div>
+        </div>
+
+        {/* Pricelist table */}
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+          <div className="px-6 py-4 bg-gray-50 border-b border-gray-100 flex flex-wrap items-center gap-3">
+            <h2 className="font-bold text-gray-800">Cenovnik <span className="text-gray-400 font-normal text-sm">({filtered.length} unosa)</span></h2>
+            <div className="flex gap-2 ml-auto flex-wrap">
+              <select value={filterMaterial} onChange={e => setFilterMaterial(e.target.value)}
+                className="border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:border-blue-400 bg-white">
+                <option value="">Svi materijali</option>
+                {allMaterials.map(m => <option key={m} value={m}>{m}</option>)}
+              </select>
+              <select value={filterProduct} onChange={e => setFilterProduct(e.target.value)}
+                className="border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:border-blue-400 bg-white">
+                <option value="">Svi proizvodi</option>
+                {allProducts.map(p => <option key={p} value={p}>{p}</option>)}
+              </select>
+            </div>
+          </div>
+
+          {filtered.length === 0 ? (
+            <div className="px-6 py-10 text-center text-gray-400 text-sm">Nema unosa. Koristite formu iznad da dodate prvi unos.</div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-gray-100 bg-gray-50/50">
+                    {['Materijal', 'Proizvod', 'Profil', 'Staklo', 'Š (mm)', 'V (mm)', 'Cena €', 'Roletna €', 'Komarnik €', 'Okapnica €', 'Pod-proz. €', 'Rabat %', 'PDV %', ''].map(h => (
+                      <th key={h} className="px-3 py-2.5 text-left text-xs text-gray-400 font-semibold whitespace-nowrap">{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {config.pricelist.map((e, idx) => {
+                    if (filterProduct && e.product !== filterProduct) return null
+                    if (filterMaterial && e.material !== filterMaterial) return null
+                    return (
+                      <tr key={idx} className="border-b border-gray-50 hover:bg-gray-50/50">
+                        <td className="px-3 py-2">
+                          <span className={`text-xs font-bold px-2 py-0.5 rounded ${e.material.toLowerCase() === 'pvc' ? 'bg-blue-100 text-blue-700' : 'bg-orange-100 text-orange-700'}`}>{e.material}</span>
+                        </td>
+                        <td className="px-3 py-2 text-xs text-gray-600 min-w-32">{e.product}</td>
+                        <td className="px-3 py-2 text-xs text-gray-600">{e.profile}</td>
+                        <td className="px-3 py-2 text-xs text-gray-500">{e.staklo || '—'}</td>
+                        {(['width', 'height', 'price', 'roletna', 'komarnik', 'okapnica', 'podprozorska'] as const).map(field => (
+                          <td key={field} className="px-3 py-2">
+                            <input type="number" min="0" step={['price', 'roletna', 'komarnik', 'okapnica', 'podprozorska'].includes(field) ? '0.01' : '1'}
+                              value={e[field]}
+                              onChange={ev => updateEntry(idx, field, ev.target.value)}
+                              className={`w-20 border border-gray-200 rounded-lg px-2 py-1 text-sm font-bold text-right focus:outline-none focus:border-blue-400 ${['price', 'roletna', 'komarnik', 'okapnica', 'podprozorska'].includes(field) ? 'text-blue-700' : 'text-gray-700'}`} />
+                          </td>
+                        ))}
+                        {(['rabat', 'pdv'] as const).map(field => (
+                          <td key={field} className="px-3 py-2">
+                            <input type="number" min="0" max="100" step="1"
+                              value={e[field]}
+                              onChange={ev => updateEntry(idx, field, ev.target.value)}
+                              className="w-16 border border-gray-200 rounded-lg px-2 py-1 text-sm font-bold text-right text-orange-600 focus:outline-none focus:border-blue-400" />
+                          </td>
+                        ))}
+                        <td className="px-3 py-2">
+                          <button onClick={() => deleteEntry(idx)} title="Obriši"
+                            className="text-red-400 hover:text-red-600 text-lg leading-none cursor-pointer transition-colors">×</button>
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+
+        {/* Montaža */}
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+          <div className="px-6 py-4 bg-gray-50 border-b border-gray-100">
+            <h2 className="font-bold text-gray-800">Montaža</h2>
+          </div>
+          <div className="px-6 py-4 flex items-center gap-4">
+            <div className="flex-1">
+              <div className="text-sm font-semibold text-gray-700">Fiksna cena ugradnje</div>
+              <div className="text-xs text-gray-400">Prikazuje se kao opcioni dodatak na kraju kalkulatora</div>
+            </div>
+            <div className="flex items-center gap-2">
+              <input type="number" step="1" value={config.montaza.fixedPrice}
+                onChange={e => updateMontaza('fixedPrice', e.target.value)}
+                className="w-24 border border-gray-200 rounded-lg px-3 py-2 text-sm font-bold text-blue-700 text-right focus:outline-none focus:border-blue-400" />
+              <span className="text-gray-400 text-sm">€</span>
+            </div>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input type="checkbox" checked={config.montaza.enabled}
+                onChange={e => updateMontaza('enabled', e.target.checked)}
+                className="rounded w-4 h-4 accent-blue-700" />
+              <span className="text-xs text-gray-500">Aktivan</span>
+            </label>
+          </div>
+        </div>
+
+        {/* Header */}
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+          <div className="px-6 py-4 bg-gray-50 border-b border-gray-100">
+            <h2 className="font-bold text-gray-800">Header</h2>
+            <p className="text-xs text-gray-400 mt-0.5">Naslov i podnaslov kalkulatora</p>
+          </div>
+          <div className="px-6 py-5 space-y-3">
+            <div>
+              <label className="block text-xs text-gray-400 mb-1">Naslov</label>
+              <input value={config.header?.title ?? ''}
+                onChange={e => setConfig({ ...config, header: { ...config.header, title: e.target.value } })}
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm font-bold focus:outline-none focus:border-blue-400" />
+            </div>
+            <div>
+              <label className="block text-xs text-gray-400 mb-1">Podnaslov</label>
+              <input value={config.header?.subtitle ?? ''}
+                onChange={e => setConfig({ ...config, header: { ...config.header, subtitle: e.target.value } })}
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-400" />
+            </div>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+          <div className="px-6 py-4 bg-gray-50 border-b border-gray-100">
+            <h2 className="font-bold text-gray-800">Footer</h2>
+            <p className="text-xs text-gray-400 mt-0.5">Tekstualni redovi ispod kalkulatora (adresa, telefon...)</p>
+          </div>
+          <div className="px-6 py-5 space-y-2">
+            {(config.footer?.lines ?? []).map((line, i) => (
+              <div key={i} className="flex gap-2">
+                <input value={line}
+                  onChange={e => {
+                    const lines = [...(config.footer?.lines ?? [])]
+                    lines[i] = e.target.value
+                    setConfig({ ...config, footer: { lines } })
+                  }}
+                  className="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-400" />
+                <button onClick={() => {
+                  const lines = (config.footer?.lines ?? []).filter((_, j) => j !== i)
+                  setConfig({ ...config, footer: { lines } })
+                }} className="text-red-400 hover:text-red-600 text-lg leading-none px-2 cursor-pointer">×</button>
               </div>
             ))}
+            <button onClick={() => {
+              const lines = [...(config.footer?.lines ?? []), '']
+              setConfig({ ...config, footer: { lines } })
+            }} className="text-blue-600 hover:text-blue-800 text-sm font-semibold cursor-pointer">+ Dodaj red</button>
           </div>
-        )}
+        </div>
 
-        {/* Additions tab */}
-        {activeTab === 'additions' && (
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-            <div className="px-6 py-4 bg-gray-50 border-b border-gray-100">
-              <h2 className="font-bold text-gray-800">Dodaci i cene</h2>
-            </div>
-            {([
-              { key: 'komarnik', label: 'Komarnik', field: 'pricePerCm2', unit: '€/cm²', desc: 'Cena × širina × visina' },
-              { key: 'roletna', label: 'Roletna', field: 'pricePerCm2', unit: '€/cm²', desc: 'Cena × širina × visina' },
-              { key: 'okapnica', label: 'Okapnica', field: 'pricePerCm', unit: '€/cm', desc: 'Cena × širina' },
-              { key: 'podprozorska', label: 'Pod-prozorska daska', field: 'pricePerCm', unit: '€/cm', desc: 'Cena × širina' },
-            ] as const).map(a => {
-              const addon = config.additions[a.key as keyof Config['additions']]
-              const val = a.field === 'pricePerCm2' ? addon.pricePerCm2 : addon.pricePerCm
-              return (
-                <div key={a.key} className="px-6 py-4 border-b border-gray-50 hover:bg-gray-50">
-                  <div className="flex items-center gap-4">
-                    <div className="flex-1">
-                      <div className="text-sm font-semibold text-gray-700">{a.label}</div>
-                      <div className="text-xs text-gray-400">{a.desc}</div>
-                    </div>
-                    <div className="flex items-center gap-2 flex-shrink-0">
-                      <input type="number" step="0.1" value={val ?? 0}
-                        onChange={e => updateAddition(a.key, a.field, e.target.value)}
-                        className="w-24 border border-gray-200 rounded-lg px-3 py-2 text-sm font-bold text-blue-700 text-right focus:outline-none focus:border-blue-400" />
-                      <span className="text-gray-400 text-sm">{a.unit}</span>
-                    </div>
-                    <label className="flex items-center gap-2 cursor-pointer flex-shrink-0">
-                      <input type="checkbox" checked={addon.enabled}
-                        onChange={e => updateAddition(a.key, 'enabled', e.target.checked)}
-                        className="rounded w-4 h-4 accent-blue-700" />
-                      <span className="text-xs text-gray-500">Aktivan</span>
-                    </label>
-                  </div>
-                </div>
-              )
-            })}
-            {/* Montaza */}
-            <div className="px-6 py-4 hover:bg-gray-50">
-              <div className="flex items-center gap-4">
-                <div className="flex-1">
-                  <div className="text-sm font-semibold text-gray-700">Montaža</div>
-                  <div className="text-xs text-gray-400">Fiksna cena ugradnje</div>
-                </div>
-                <div className="flex items-center gap-2 flex-shrink-0">
-                  <input type="number" step="1" value={config.additions.montaza.fixedPrice ?? 0}
-                    onChange={e => updateAddition('montaza', 'fixedPrice', e.target.value)}
-                    className="w-24 border border-gray-200 rounded-lg px-3 py-2 text-sm font-bold text-blue-700 text-right focus:outline-none focus:border-blue-400" />
-                  <span className="text-gray-400 text-sm">€</span>
-                </div>
-                <label className="flex items-center gap-2 cursor-pointer flex-shrink-0">
-                  <input type="checkbox" checked={config.additions.montaza.enabled}
-                    onChange={e => updateAddition('montaza', 'enabled', e.target.checked)}
-                    className="rounded w-4 h-4 accent-blue-700" />
-                  <span className="text-xs text-gray-500">Aktivan</span>
-                </label>
-              </div>
-            </div>
-          </div>
-        )}
-
-        <div className="flex justify-end mt-6">
+        <div className="flex justify-end">
           <button onClick={handleSave} disabled={loading}
             className="bg-blue-800 hover:bg-blue-900 text-white font-bold py-3 px-10 rounded-xl transition-all disabled:opacity-50 cursor-pointer">
             {loading ? 'Čuvanje...' : '💾 Sačuvaj sve promene'}

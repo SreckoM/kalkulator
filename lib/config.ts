@@ -1,28 +1,27 @@
 import fs from 'fs'
 import path from 'path'
 
-export interface Product { id: string; name: string }
-export interface Type { id: string; name: string; products: string[] }
-export interface Material { id: string; name: string; products: string[] }
-export interface Profile { id: string; name: string; perimFactor: number; material: string; image: string }
-export interface Surcharge { minH: number; amount: number }
-export interface Formula {
+export interface PriceEntry {
   product: string
-  type: string
   material: string
-  areaCoeff: number
-  perimCoeff: number
-  constant: number
-  surcharges?: Surcharge[]
+  profile: string
+  staklo: string       // "" means glass selection not applicable (doors)
+  width: number        // mm
+  height: number       // mm
+  price: number        // €
+  roletna: number      // € per entry, 0 = not available
+  komarnik: number
+  okapnica: number
+  podprozorska: number
+  rabat: number        // % added to total, hidden from user
+  pdv: number          // % added to total, hidden from user
 }
-export interface Addition { name: string; pricePerCm2?: number; pricePerCm?: number; fixedPrice?: number; enabled: boolean; products?: string[] }
+
 export interface Config {
-  products: Product[]
-  types: Type[]
-  materials: Material[]
-  profiles: Profile[]
-  formulas: Formula[]
-  additions: { komarnik: Addition; roletna: Addition; okapnica: Addition; podprozorska: Addition; montaza: Addition }
+  pricelist: PriceEntry[]
+  montaza: { fixedPrice: number; enabled: boolean }
+  header: { title: string; subtitle: string }
+  footer: { lines: string[] }
 }
 
 const CONFIG_PATH = path.join(process.cwd(), 'data', 'config.json')
