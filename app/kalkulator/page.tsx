@@ -425,13 +425,13 @@ export default function KalkulatorPage() {
             <Step n={nextStep()} title="Dodaci (opciono)">
               <div className="grid grid-cols-2 gap-3">
                 {([
-                  { key: 'roletna', label: 'Roletna', val: roletna, set: setRoletna, price: selectedEntry!.roletna,
+                  { key: 'roletna', label: 'Roletna', val: roletna, set: setRoletna, price: selectedEntry!.roletna, note: '+200mm visina',
                     icon: <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="3" rx="1"/><rect x="3" y="8" width="18" height="2.5" rx="0.75"/><rect x="3" y="12.5" width="18" height="2.5" rx="0.75"/><rect x="3" y="17" width="18" height="2.5" rx="0.75"/></svg> },
-                  { key: 'komarnik', label: 'Komarnik', val: komarnik, set: setKomarnik, price: selectedEntry!.komarnik,
+                  { key: 'komarnik', label: 'Komarnik', val: komarnik, set: setKomarnik, price: selectedEntry!.komarnik, note: '',
                     icon: <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="1.5"/><line x1="3" y1="8" x2="21" y2="8"/><line x1="3" y1="13" x2="21" y2="13"/><line x1="3" y1="18" x2="21" y2="18"/><line x1="8" y1="3" x2="8" y2="21"/><line x1="13" y1="3" x2="13" y2="21"/><line x1="18" y1="3" x2="18" y2="21"/></svg> },
-                  { key: 'okapnica', label: 'Okapnica', val: okapnica, set: setOkapnica, price: selectedEntry!.okapnica,
+                  { key: 'okapnica', label: 'Okapnica', val: okapnica, set: setOkapnica, price: selectedEntry!.okapnica, note: '',
                     icon: <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="5" width="20" height="5" rx="1"/><path d="M4 10 L4 17 Q4 19 6 19 L18 19 Q20 19 20 17 L20 10"/></svg> },
-                  { key: 'podprozorska', label: 'Pod-prozorska daska', val: podprozorska, set: setPodprozorska, price: selectedEntry!.podprozorska,
+                  { key: 'podprozorska', label: 'Pod-prozorska daska', val: podprozorska, set: setPodprozorska, price: selectedEntry!.podprozorska, note: '',
                     icon: <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="14" width="20" height="4" rx="1"/><rect x="5" y="4" width="14" height="10" rx="1"/><line x1="12" y1="4" x2="12" y2="14"/><line x1="5" y1="9" x2="19" y2="9"/></svg> },
                 ] as const).filter(a => a.price > 0).map(a => (
                   <button key={a.key} onClick={() => a.set(v => !v)}
@@ -441,6 +441,7 @@ export default function KalkulatorPage() {
                     <div className={`text-xs font-bold mt-0.5 ${a.val ? 'text-blue-600' : 'text-gray-400'}`}>
                       {a.price.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €
                     </div>
+                    {a.note && <div className={`text-xs mt-1 ${a.val ? 'text-orange-500' : 'text-gray-400'}`}>⚠ {a.note}</div>}
                     <div className={`mt-2 w-4 h-4 rounded border-2 flex items-center justify-center transition-all ${a.val ? 'bg-blue-700 border-blue-700' : 'border-gray-300'}`}>
                       {a.val && <svg className="w-2.5 h-2.5 text-white" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/></svg>}
                     </div>
@@ -496,7 +497,7 @@ export default function KalkulatorPage() {
                 ) : (
                   <div className="text-white/30 text-4xl font-black" style={{ fontFamily: 'Georgia, serif' }}>--</div>
                 )}
-                <p className="text-white/40 text-xs mt-2">* Okvirna cena sa PDV-om</p>
+                <p className="text-white/40 text-xs mt-2">* Cene su informativnog karaktera. Za tačnu ponudu kontaktirajte nas.</p>
               </div>
               <button onClick={() => setShowModal(true)}
                 className="flex-shrink-0 bg-yellow-400 hover:bg-yellow-300 active:scale-95 text-gray-900 font-black py-3 px-6 rounded-xl transition-all shadow-lg text-sm cursor-pointer">
