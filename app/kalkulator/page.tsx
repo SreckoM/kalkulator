@@ -425,13 +425,13 @@ export default function KalkulatorPage() {
             <Step n={nextStep()} title="Dodaci (opciono)">
               <div className="grid grid-cols-2 gap-3">
                 {([
-                  { key: 'roletna', label: 'Roletna', val: roletna, set: setRoletna, price: selectedEntry!.roletna, note: '+200mm visina',
+                  { key: 'roletna', label: 'Roletna', val: roletna, set: setRoletna, price: selectedEntry!.roletna, note: '+200mm na visinu odabrane visine prozora',
                     icon: <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="3" rx="1"/><rect x="3" y="8" width="18" height="2.5" rx="0.75"/><rect x="3" y="12.5" width="18" height="2.5" rx="0.75"/><rect x="3" y="17" width="18" height="2.5" rx="0.75"/></svg> },
                   { key: 'komarnik', label: 'Komarnik', val: komarnik, set: setKomarnik, price: selectedEntry!.komarnik, note: '',
                     icon: <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="1.5"/><line x1="3" y1="8" x2="21" y2="8"/><line x1="3" y1="13" x2="21" y2="13"/><line x1="3" y1="18" x2="21" y2="18"/><line x1="8" y1="3" x2="8" y2="21"/><line x1="13" y1="3" x2="13" y2="21"/><line x1="18" y1="3" x2="18" y2="21"/></svg> },
-                  { key: 'okapnica', label: 'Okapnica', val: okapnica, set: setOkapnica, price: selectedEntry!.okapnica, note: '',
+                  { key: 'okapnica', label: 'Okapnica', val: okapnica, set: setOkapnica, price: selectedEntry!.okapnica, note: '150mm',
                     icon: <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="5" width="20" height="5" rx="1"/><path d="M4 10 L4 17 Q4 19 6 19 L18 19 Q20 19 20 17 L20 10"/></svg> },
-                  { key: 'podprozorska', label: 'Pod-prozorska daska', val: podprozorska, set: setPodprozorska, price: selectedEntry!.podprozorska, note: '',
+                  { key: 'podprozorska', label: 'Pod-prozorska daska', val: podprozorska, set: setPodprozorska, price: selectedEntry!.podprozorska, note: '150mm',
                     icon: <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="14" width="20" height="4" rx="1"/><rect x="5" y="4" width="14" height="10" rx="1"/><line x1="12" y1="4" x2="12" y2="14"/><line x1="5" y1="9" x2="19" y2="9"/></svg> },
                 ] as const).filter(a => a.price > 0).map(a => (
                   <button key={a.key} onClick={() => a.set(v => !v)}
@@ -485,6 +485,11 @@ export default function KalkulatorPage() {
                   </div>
                 ))}
                 <div className="border-t border-white/20 pt-1.5" />
+              </div>
+            )}
+            {roletna && (
+              <div className="mb-4 bg-white/10 rounded-xl px-4 py-3 text-xs text-white/70 leading-relaxed">
+                <span className="font-bold text-white/90">Napomena:</span> Kalkulator dodaje za roletnu 200mm na zadatu visinu prozora. Ukoliko ste odabrali visinu prozora 1000mm, sa roletnom će biti ukupno 1200mm.
               </div>
             )}
             <div className="flex items-end justify-between flex-wrap gap-4">
